@@ -1,0 +1,5 @@
+interface:
+  display_name: "Pencil Designer"
+  short_description: "Design Pencil .pen UI files and prototypes"
+  brand_color: "#3B82F6"
+  default_prompt: "Use $pencil-designer to create a polished .pen UI design from my product requirements."

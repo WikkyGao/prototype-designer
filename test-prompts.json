@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "prompt": "帮我创建一个登录页面，包含邮箱输入、密码输入和登录按钮",
+    "expected": "使用 CLI Agent 模式创建 .pen 文件，完成环境校验→PRD检查→设计→保存的完整流程"
+  },
+  {
+    "id": 2,
+    "prompt": "我想设计一个数据分析仪表板，包含统计卡片和图表",
+    "expected": "先尝试 CLI，如不满足则降级到 MCP Interactive 模式，使用组件复用和分批设计"
+  },
+  {
+    "id": 3,
+    "prompt": "把 login.pen 生成可交互的 HTML 原型",
+    "expected": "读取 .pen 结构→解析 context 交互描述→生成单文件 HTML→实现交互映射"
+  }
+]

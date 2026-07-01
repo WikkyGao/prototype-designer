@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html><body>
+<h3>localStorage Test</h3>
+<button onclick="save()">Save</button>
+<button onclick="load()">Load</button>
+<pre id="out"></pre>
+<script>
+var out=document.getElementById('out');
+function save(){
+  var d={x:100,y:200,text:'hello'};
+  try{localStorage.setItem('test_key',JSON.stringify(d));out.textContent='SAVED: '+JSON.stringify(d)}catch(e){out.textContent='SAVE ERROR: '+e}
+}
+function load(){
+  try{var s=localStorage.getItem('test_key');out.textContent='LOADED: '+s}catch(e){out.textContent='LOAD ERROR: '+e}
+}
+</script>
+</body></html>

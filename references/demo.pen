@@ -1,0 +1,215 @@
+{
+  "version": "2.9",
+  "children": [
+    {
+      "type": "frame",
+      "id": "bi8Au",
+      "x": 40,
+      "y": -120,
+      "name": "Frame",
+      "clip": true,
+      "width": 1215,
+      "height": 1067,
+      "fill": "#FFFFFF",
+      "layout": "none"
+    },
+    {
+      "type": "frame",
+      "id": "YlJ7V",
+      "x": 100,
+      "y": 105,
+      "name": "noteFrame1",
+      "width": 370,
+      "height": 220,
+      "fill": "#E3F2FD",
+      "cornerRadius": 8,
+      "layout": "vertical",
+      "padding": 16,
+      "children": [
+        {
+          "type": "text",
+          "id": "OkKpW",
+          "name": "noteTitle1",
+          "fill": "#1976D2",
+          "content": "📝 功能说明",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "note",
+          "id": "23lPR",
+          "name": "note1",
+          "width": 340,
+          "height": 0,
+          "content": "本页面用于展示用户管理功能，包含以下核心功能：\n1. 用户列表展示（支持分页和搜索）\n2. 用户详情查看\n3. 用户信息编辑\n4. 用户权限管理\n5. 用户状态切换（启用/禁用）\n\n页面采用响应式设计，支持桌面端和移动端访问。"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "6bxlQ",
+      "x": 500,
+      "y": 105,
+      "name": "noteFrame2",
+      "width": 320,
+      "height": 220,
+      "fill": "#E8F5E9",
+      "cornerRadius": 8,
+      "layout": "vertical",
+      "padding": 16,
+      "children": [
+        {
+          "type": "text",
+          "id": "0Gwsv",
+          "name": "noteTitle2",
+          "fill": "#388E3C",
+          "content": "📋 字段说明",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "note",
+          "id": "oB5Nk",
+          "name": "note2",
+          "width": 290,
+          "height": 0,
+          "content": "用户表字段：\n• id: 用户唯一标识（自动生成）\n• name: 用户姓名（必填）\n• email: 邮箱地址（必填，唯一）\n• role: 用户角色（admin/user/guest）\n• status: 账户状态（active/inactive）\n• createdAt: 创建时间\n• updatedAt: 更新时间"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "mBfDj",
+      "x": 861,
+      "y": 477,
+      "name": "noteFrame3",
+      "width": 340,
+      "height": 200,
+      "fill": "#F3E5F5",
+      "cornerRadius": 8,
+      "layout": "vertical",
+      "padding": 16,
+      "children": [
+        {
+          "type": "text",
+          "id": "4RBLz",
+          "name": "noteTitle3",
+          "fill": "#7B1FA2",
+          "content": "🔄 交互说明",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "note",
+          "id": "lokTJ",
+          "name": "note3",
+          "width": 310,
+          "height": 0,
+          "content": "交互流程：\n1. 点击用户行 → 展开详情面板\n2. 点击编辑按钮 → 打开编辑弹窗\n3. 点击删除按钮 → 显示确认对话框\n4. 切换状态开关 → 即时更新状态\n\n所有操作均有 loading 和 toast 提示。"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "X0DsY",
+      "x": 861,
+      "y": 105,
+      "name": "noteFrame4",
+      "width": 300,
+      "height": 200,
+      "fill": "#FFF3E0",
+      "cornerRadius": 8,
+      "layout": "vertical",
+      "padding": 16,
+      "children": [
+        {
+          "type": "text",
+          "id": "QqR7H",
+          "name": "noteTitle4",
+          "fill": "#F57C00",
+          "content": "⚠️ 注意事项",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "note",
+          "id": "KGzB9",
+          "name": "note4",
+          "width": 270,
+          "height": 0,
+          "content": "重要提醒：\n1. 删除操作需要管理员权限\n2. 邮箱修改需要验证\n3. 密码字段仅在编辑时显示\n4. 批量操作需要二次确认\n\n请确保数据一致性检查！"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "FqznL",
+      "x": 100,
+      "y": 477,
+      "name": "noteFrame5",
+      "width": 320,
+      "height": 220,
+      "fill": "#E0F7FA",
+      "cornerRadius": 8,
+      "layout": "vertical",
+      "padding": 16,
+      "children": [
+        {
+          "type": "text",
+          "id": "8N7UE",
+          "name": "noteTitle5",
+          "fill": "#0097A7",
+          "content": "💻 技术备注",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "note",
+          "id": "Rj5Nm",
+          "name": "note5",
+          "width": 290,
+          "height": 0,
+          "content": "技术栈：\n• 前端: React + TypeScript\n• 状态管理: Zustand\n• UI 组件: Ant Design\n• API: RESTful\n\n性能优化：\n• 虚拟滚动\n• 懒加载\n• 缓存策略"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "6Sw3N",
+      "x": 500,
+      "y": 477,
+      "name": "noteFrame6",
+      "width": 280,
+      "height": 220,
+      "fill": "#FCE4EC",
+      "cornerRadius": 8,
+      "layout": "vertical",
+      "padding": 16,
+      "children": [
+        {
+          "type": "text",
+          "id": "za6Jn",
+          "name": "noteTitle6",
+          "fill": "#C2185B",
+          "content": "✅ 待办事项",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fontWeight": "bold"
+        },
+        {
+          "type": "note",
+          "id": "vHcWj",
+          "name": "note6",
+          "width": 250,
+          "height": 0,
+          "content": "TODO List:\n☐ 完善搜索功能\n☐ 添加批量导入\n☐ 实现数据导出\n☑ 用户详情页面\n☑ 权限管理模块\n\n截止日期: 2026-04-15"
+        }
+      ]
+    }
+  ]
+}

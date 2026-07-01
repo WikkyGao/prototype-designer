@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>水滴标注与说明卡片 - 样式选择</title>
+<style>
+:root {
+  --bg: #f0f2f5;
+  --card-bg: #fff;
+  --border: #e0e0e0;
+  --text: #333;
+  --text-secondary: #666;
+  --accent: #ff5722;
+  --panel-bg: #fafbfc;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+/* ─── Header ─── */
+.header {
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header h1 { font-size: 20px; font-weight: 600; }
+.header .subtitle { color: var(--text-secondary); font-size: 13px; }
+
+/* ─── Main Layout ─── */
+.main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* ─── Section ─── */
+.section {
+  margin-bottom: 40px;
+}
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #1976d2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-desc {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+/* ─── Option Grid ─── */
+.option-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 20px;
+}
+.option-grid-3 { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+
+/* ─── Option Card ─── */
+.option-card {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.25s;
+  cursor: pointer;
+  position: relative;
+}
+.option-card:hover { border-color: #90caf9; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+.option-card.selected {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25,118,210,0.15);
+}
+.option-card.selected::after {
+  content: "✓";
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  background: #1976d2;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+.option-preview {
+  background: #fafbfc;
+  border-bottom: 1px solid var(--border);
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 24px;
+  overflow: hidden;
+}
+.option-label {
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.option-desc {
+  padding: 0 16px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ════════════════════════════════════════════ */
+/*  真正的水滴形 — SVG + 渐变 + 高光           */
+/* ════════════════════════════════════════════ */
+
+/* 水滴容器：内联 SVG */
+.drop-svg { display: inline-block; vertical-align: middle; }
+
+/* ═══════ 通用编号样式 ═══════ */
+.drop-num {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 700;
+  fill: #fff;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+/* ═══════ 水滴动画 ═══════ */
+@keyframes dropPulse {
+  0%,100% { filter: drop-shadow(0 1px 3px rgba(255,87,34,0.35)); }
+  50%    { filter: drop-shadow(0 2px 10px rgba(255,87,34,0.65)); }
+}
+@keyframes dropBreathe {
+  0%,100% { opacity: 1; }
+  50%    { opacity: 0.5; }
+}
+@keyframes dropWiggle {
+  0%,100% { transform: rotate(0deg); }
+  25%    { transform: rotate(2deg); }
+  75%    { transform: rotate(-2deg); }
+}
+@keyframes highlightShift {
+  0%,100% { opacity: 0.7; }
+  50%    { opacity: 1; }
+}
+
+/* ═══════ 整体标注点包装 ═══════ */
+.annotation-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  position: relative;
+}
+.annotation-wrap .drop-label {
+  font-size: 8px;
+  color: #ff5722;
+  font-weight: 600;
+  margin-top: 1px;
+  text-align: center;
+  line-height: 1;
+}
+
+/* ─── 给演示用的脉冲包装 ─── */
+.pulse-shadow .annotation-wrap svg { animation: dropPulse 2s ease-in-out infinite; }
+.pulse-scale  .annotation-wrap { animation: dropWiggle 2.5s ease-in-out infinite; }
+.breathe      .annotation-wrap { animation: dropBreathe 2.5s ease-in-out infinite; }
+
+/* ═══════ 连线样式 ═══════ */
+.connection-demo { position: relative; width: 100%; height: 100px; }
+.connection-demo svg { width: 100%; height: 100%; overflow: visible; }
+.l1 { fill:none; stroke:#ff5722; stroke-width:1.5; stroke-dasharray:6 3; animation:dashFlow 20s linear infinite; }
+@keyframes dashFlow { to { stroke-dashoffset: -180; } }
+
+/* ═══════ 色系变体 ═══════ */
+.color-swatches {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.color-dot {
+  width: 20px; height: 20px; border-radius: 3px; cursor: pointer;
+  border: 2px solid transparent; transition: all 0.2s;
+}
+.color-dot:hover { transform: scale(1.2); }
+.color-dot.active { border-color: #333; transform: scale(1.15); }
+
+/* ═══════ 说明卡片样式 ═══════ */
+.info-card-demo {
+  width: 100%;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+/* 样式 A: 左边框强调 */
+.card-a { border-left: 4px solid #1976D2; background: #E3F2FD; }
+.card-a.orange { border-color: #F57C00; background: #FFF3E0; }
+.card-a.green  { border-color: #388E3C; background: #E8F5E9; }
+.card-a.purple { border-color: #7B1FA2; background: #F3E5F5; }
+.card-a.teal   { border-color: #0097A7; background: #E0F7FA; }
+.card-a.pink   { border-color: #C2185B; background: #FCE4EC; }
+
+/* 样式 B: 顶部色条 */
+.card-b { border-top: 3px solid #1976D2; background: #fafbfc; }
+.card-b.orange { border-top-color: #F57C00; }
+.card-b.green  { border-top-color: #388E3C; }
+.card-b.purple { border-top-color: #7B1FA2; }
+.card-b.teal   { border-top-color: #0097A7; }
+.card-b.pink   { border-top-color: #C2185B; }
+
+/* 样式 C: 左上角标签 + 浅底 */
+.card-c {
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  position: relative;
+  padding-top: 22px;
+}
+.card-c .card-tag {
+  position: absolute; top: -1px; left: -1px;
+  padding: 2px 10px;
+  font-size: 10px; font-weight: 600; color: #fff;
+  border-radius: 8px 0 8px 0;
+}
+.card-c .card-tag.blue    { background: #1976D2; }
+.card-c .card-tag.orange  { background: #F57C00; }
+.card-c .card-tag.green   { background: #388E3C; }
+.card-c .card-tag.purple  { background: #7B1FA2; }
+.card-c .card-tag.teal    { background: #0097A7; }
+.card-c .card-tag.pink    { background: #C2185B; }
+
+/* 样式 D: 左侧色带 + 圆角卡片 */
+.card-d {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  border-left: 0;
+  position: relative;
+  padding-left: 16px;
+}
+.card-d::before {
+  content: "";
+  position: absolute; left: 0; top: 4px; bottom: 4px;
+  width: 4px; border-radius: 2px;
+}
+.card-d.blue::before   { background: #1976D2; }
+.card-d.orange::before { background: #F57C00; }
+.card-d.green::before  { background: #388E3C; }
+.card-d.purple::before { background: #7B1FA2; }
+.card-d.teal::before   { background: #0097A7; }
+.card-d.pink::before   { background: #C2185B; }
+
+/* 样式 E: 紧凑型列表卡片 */
+.card-e {
+  background: #fafbfc;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 11px;
+}
+.card-e .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; }
+.card-e .dot.blue   { background: #1976D2; }
+.card-e .dot.orange { background: #F57C00; }
+.card-e .dot.green  { background: #388E3C; }
+.card-e .dot.purple { background: #7B1FA2; }
+.card-e .dot.teal   { background: #0097A7; }
+.card-e .dot.pink   { background: #C2185B; }
+
+/* 样式 F: 引用块风格 */
+.card-f {
+  background: #fefefe;
+  border: 1px solid #e8e8e8;
+  border-radius: 0 8px 8px 0;
+  border-left: 4px solid #1976D2;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+.card-f.orange { border-left-color: #F57C00; }
+.card-f.green  { border-left-color: #388E3C; }
+.card-f.purple { border-left-color: #7B1FA2; }
+.card-f.teal   { border-left-color: #0097A7; }
+.card-f.pink   { border-left-color: #C2185B; }
+
+/* ═══════ 字体调整控件样式 ═══════ */
+.font-ctrl {
+  display: flex; gap: 4px; align-items: center;
+}
+.font-ctrl button {
+  border: 1px solid #ccc; background: #fff;
+  cursor: pointer; border-radius: 3px;
+  font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.font-ctrl button:hover { background: #e3f2fd; border-color: #1976d2; }
+
+/* 变体 A: 小方块 */
+.font-a button { width: 22px; height: 22px; }
+/* 变体 B: 圆按钮 */
+.font-b button { width: 26px; height: 26px; border-radius: 50%; }
+/* 变体 C: 胶囊形 */
+.font-c button { padding: 2px 10px; border-radius: 12px; font-size: 13px; }
+
+/* ═══════ 拖拽分割线样式 ═══════ */
+.splitter-demo {
+  height: 40px; display: flex; align-items: center; gap: 8px;
+}
+.spl-a { width: 4px; height: 32px; background: #e0e0e0; border-radius: 0; cursor: col-resize; }
+.spl-b { width: 6px; height: 36px; background: #eee; border-radius: 3px; cursor: col-resize; border: 1px solid #ddd; }
+.spl-c { width: 3px; height: 28px; background: #1976d2; border-radius: 2px; cursor: col-resize; opacity: 0.5; }
+.spl-d { width: 8px; height: 40px; background: repeating-linear-gradient(0deg, transparent, transparent 3px, #ccc 3px, #ccc 5px); cursor: col-resize; border-radius: 2px; }
+
+/* ═══════ 按钮样式 ═══════ */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 20px; border: none; border-radius: 6px;
+  cursor: pointer; font-size: 14px; font-weight: 500;
+  transition: all 0.2s;
+}
+.btn-primary { background: #1976d2; color: #fff; }
+.btn-primary:hover { background: #1565c0; }
+.btn-secondary { background: #fff; color: #333; border: 1px solid #ccc; }
+.btn-secondary:hover { background: #f5f5f5; }
+.btn-actions {
+  display: flex; gap: 12px; justify-content: center;
+  margin-top: 32px; padding: 20px; background: #fff;
+  border-radius: 12px; position: sticky; bottom: 16px;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+}
+
+/* ═══════ 选中结果面板 ═══════ */
+.selection-summary {
+  background: #fff; border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px 20px; margin-bottom: 24px; display: flex; gap: 24px;
+  flex-wrap: wrap; align-items: center; font-size: 13px;
+}
+.selection-summary .item { display: flex; align-items: center; gap: 6px; }
+.selection-summary .item .key { color: var(--text-secondary); }
+.selection-summary .item .val { font-weight: 600; }
+
+/* ═══════ Tab 切换 ═══════ */
+.tabs { display: flex; gap: 4px; margin-bottom: 20px; background: #e8ebf0; padding: 4px; border-radius: 8px; }
+.tab-btn {
+  padding: 8px 20px; border: none; background: transparent;
+  border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;
+  transition: all 0.2s; color: #666;
+}
+.tab-btn.active { background: #fff; color: #1976d2; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ═══════ 分类标签样式 ═══════ */
+.cat-tag {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500;
+}
+.cat-tag.func   { background: #E3F2FD; color: #1976D2; }
+.cat-tag.field  { background: #E8F5E9; color: #388E3C; }
+.cat-tag.inter  { background: #F3E5F5; color: #7B1FA2; }
+.cat-tag.warn   { background: #FFF3E0; color: #F57C00; }
+.cat-tag.tech   { background: #E0F7FA; color: #0097A7; }
+.cat-tag.todo   { background: #FCE4EC; color: #C2185B; }
+
+/* ─── 预览区提示箭头 ─── */
+.preview-hint {
+  position: absolute; bottom: 8px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px; color: #999; white-space: nowrap;
+  background: rgba(0,0,0,0.05); padding: 2px 8px; border-radius: 10px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>💧 水滴标注 & 说明卡片 — 样式选择</h1>
+  <span class="subtitle">点击卡片选择你喜欢的样式，选择后卡片会出现蓝色边框和 ✓</span>
+</div>
+
+<div class="main">
+
+<!-- ════════════════════════════════════════════ -->
+<!-- 选中结果摘要 -->
+<!-- ════════════════════════════════════════════ -->
+<div class="selection-summary" id="summary">
+  <span style="font-weight:600;color:#1976d2;">当前选择：</span>
+  <span class="item"><span class="key">水滴形状：</span><span class="val" id="sumDrop">—</span></span>
+  <span class="item"><span class="key">动画效果：</span><span class="val" id="sumAnim">—</span></span>
+  <span class="item"><span class="key">卡片样式：</span><span class="val" id="sumCard">—</span></span>
+  <span class="item"><span class="key">连线风格：</span><span class="val" id="sumLine">—</span></span>
+  <span class="item"><span class="key">分割线：</span><span class="val" id="sumSplit">—</span></span>
+  <span class="item"><span class="key">字体控件：</span><span class="val" id="sumFont">—</span></span>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- TAB: 水滴标注 -->
+<!-- ════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-title">💧 一、水滴标注点样式</div>
+  <div class="section-desc">标注点用于在主页面中标记交互型控件（按钮、输入框等），点击可连线到右侧说明面板对应的说明卡片。</div>
+
+  <!-- 形状 -->
+  <h3 style="margin:16px 0 10px;font-size:15px;">1.1 标注点形状 — SVG 真实水滴</h3>
+  <div class="option-grid">
+
+    <!-- A: 经典泪滴（上大下小） -->
+    <div class="option-card" onclick="selectOption(this,'dropShape','A')" id="dropShape-A">
+      <div class="option-preview" style="gap:24px;">
+        <span class="annotation-wrap">
+          <svg width="24" height="30" viewBox="0 0 24 30">
+            <defs><radialGradient id="ga1" cx="40%" cy="35%"><stop offset="0%" stop-color="#ffccbc"/><stop offset="30%" stop-color="#ff7043"/><stop offset="100%" stop-color="#bf360c"/></radialGradient></defs>
+            <path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#ga1)"/>
+            <ellipse cx="8" cy="6" rx="3" ry="2.5" fill="white" opacity="0.5" transform="rotate(-15 8 6)"/>
+            <text x="12" y="11" class="drop-num" font-size="10">1</text>
+          </svg>
+        </span>
+        <span class="annotation-wrap">
+          <svg width="24" height="30" viewBox="0 0 24 30"><defs><radialGradient id="ga2" cx="40%" cy="35%"><stop offset="0%" stop-color="#ffccbc"/><stop offset="30%" stop-color="#ff7043"/><stop offset="100%" stop-color="#bf360c"/></radialGradient></defs><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#ga2)"/><ellipse cx="8" cy="6" rx="3" ry="2.5" fill="white" opacity="0.5" transform="rotate(-15 8 6)"/><text x="12" y="11" class="drop-num" font-size="10">2</text></svg>
+        </span>
+        <span class="annotation-wrap">
+          <svg width="24" height="30" viewBox="0 0 24 30"><defs><radialGradient id="ga3" cx="40%" cy="35%"><stop offset="0%" stop-color="#ffccbc"/><stop offset="30%" stop-color="#ff7043"/><stop offset="100%" stop-color="#bf360c"/></radialGradient></defs><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#ga3)"/><ellipse cx="8" cy="6" rx="3" ry="2.5" fill="white" opacity="0.5" transform="rotate(-15 8 6)"/><text x="12" y="11" class="drop-num" font-size="10">3</text></svg>
+        </span>
+      </div>
+      <div class="option-label">A. 经典泪滴（上圆下尖）</div>
+      <div class="option-desc">顶部饱满圆润 + 底部锥形收尖，顶部 3 层渐变 + 白光反射</div>
+    </div>
+
+    <!-- B: 修长水滴 -->
+    <div class="option-card" onclick="selectOption(this,'dropShape','B')" id="dropShape-B">
+      <div class="option-preview" style="gap:24px;">
+        <span class="annotation-wrap">
+          <svg width="20" height="32" viewBox="0 0 20 32">
+            <defs><radialGradient id="gb1" cx="40%" cy="30%"><stop offset="0%" stop-color="#ffccbc"/><stop offset="25%" stop-color="#ff7043"/><stop offset="100%" stop-color="#bf360c"/></radialGradient></defs>
+            <path d="M10 31 C10 31 0 18 0 8 C0 3.5 4.5 0 10 0 C15.5 0 20 3.5 20 8 C20 18 10 31 10 31Z" fill="url(#gb1)"/>
+            <ellipse cx="7" cy="6" rx="2.5" ry="2" fill="white" opacity="0.5" transform="rotate(-12 7 6)"/>
+            <text x="10" y="21" class="drop-num" font-size="9">1</text>
+          </svg>
+        </span>
+        <span class="annotation-wrap">
+          <svg width="20" height="32" viewBox="0 0 20 32"><defs><radialGradient id="gb2" cx="40%" cy="30%"><stop offset="0%" stop-color="#ffccbc"/><stop offset="25%" stop-color="#ff7043"/><stop offset="100%" stop-color="#bf360c"/></radialGradient></defs><path d="M10 31 C10 31 0 18 0 8 C0 3.5 4.5 0 10 0 C15.5 0 20 3.5 20 8 C20 18 10 31 10 31Z" fill="url(#gb2)"/><ellipse cx="7" cy="6" rx="2.5" ry="2" fill="white" opacity="0.5" transform="rotate(-12 7 6)"/><text x="10" y="21" class="drop-num" font-size="9">2</text></svg>
+        </span>
+        <span class="annotation-wrap">
+          <svg width="20" height="32" viewBox="0 0 20 32"><defs><radialGradient id="gb3" cx="40%" cy="30%"><stop offset="0%" stop-color="#ffccbc"/><stop offset="25%" stop-color="#ff7043"/><stop offset="100%" stop-color="#bf360c"/></radialGradient></defs><path d="M10 31 C10 31 0 18 0 8 C0 3.5 4.5 0 10 0 C15.5 0 20 3.5 20 8 C20 18 10 31 10 31Z" fill="url(#gb3)"/><ellipse cx="7" cy="6" rx="2.5" ry="2" fill="white" opacity="0.5" transform="rotate(-12 7 6)"/><text x="10" y="21" class="drop-num" font-size="9">3</text></svg>
+        </span>
+      </div>
+      <div class="option-label">B. 修长水滴</div>
+      <div class="option-desc">更高挑纤细，底部尖角延长，比例优雅</div>
+    </div>
+
+    <!-- C: 透明玻璃水滴 -->
+    <div class="option-card" onclick="selectOption(this,'dropShape','C')" id="dropShape-C">
+      <div class="option-preview" style="gap:24px;">
+        <span class="annotation-wrap">
+          <svg width="26" height="32" viewBox="0 0 26 32">
+            <defs><radialGradient id="gc1" cx="40%" cy="35%"><stop offset="0%" stop-color="rgba(255,204,188,0.9)"/><stop offset="40%" stop-color="rgba(255,112,67,0.7)"/><stop offset="100%" stop-color="rgba(191,54,12,0.6)"/></radialGradient></defs>
+            <path d="M13 31 C13 31 2 18 2 8 C2 3.6 6.9 0 13 0 C19.1 0 24 3.6 24 8 C24 18 13 31 13 31Z" fill="url(#gc1)" stroke="#e64a19" stroke-width="1.5"/>
+            <path d="M6 7 C8 5 11 4 13 4" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+            <text x="13" y="20" class="drop-num" font-size="10">1</text>
+          </svg>
+        </span>
+        <span class="annotation-wrap">
+          <svg width="26" height="32" viewBox="0 0 26 32"><defs><radialGradient id="gc2" cx="40%" cy="35%"><stop offset="0%" stop-color="rgba(255,204,188,0.9)"/><stop offset="40%" stop-color="rgba(255,112,67,0.7)"/><stop offset="100%" stop-color="rgba(191,54,12,0.6)"/></radialGradient></defs><path d="M13 31 C13 31 2 18 2 8 C2 3.6 6.9 0 13 0 C19.1 0 24 3.6 24 8 C24 18 13 31 13 31Z" fill="url(#gc2)" stroke="#e64a19" stroke-width="1.5"/><path d="M6 7 C8 5 11 4 13 4" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.6"/><text x="13" y="20" class="drop-num" font-size="10">2</text></svg>
+        </span>
+        <span class="annotation-wrap">
+          <svg width="26" height="32" viewBox="0 0 26 32"><defs><radialGradient id="gc3" cx="40%" cy="35%"><stop offset="0%" stop-color="rgba(255,204,188,0.9)"/><stop offset="40%" stop-color="rgba(255,112,67,0.7)"/><stop offset="100%" stop-color="rgba(191,54,12,0.6)"/></radialGradient></defs><path d="M13 31 C13 31 2 18 2 8 C2 3.6 6.9 0 13 0 C19.1 0 24 3.6 24 8 C24 18 13 31 13 31Z" fill="url(#gc3)" stroke="#e64a19" stroke-width="1.5"/><path d="M6 7 C8 5 11 4 13 4" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.6"/><text x="13" y="20" class="drop-num" font-size="10">3</text></svg>
+        </span>
+      </div>
+      <div class="option-label">C. 玻璃水滴（半透+弧光）</div>
+      <div class="option-desc">半透明填充 + 描边 + 弧形反光条，真实水珠质感</div>
+    </div>
+
+    <!-- D: 圆润大水滴 -->
+    <div class="option-card" onclick="selectOption(this,'dropShape','D')" id="dropShape-D">
+      <div class="option-preview" style="gap:24px;">
+        <span class="annotation-wrap">
+          <svg width="28" height="30" viewBox="0 0 28 30">
+            <defs>
+              <linearGradient id="gd1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffab91"/><stop offset="100%" stop-color="#bf360c"/></linearGradient>
+              <filter id="shadow1"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#d84315" flood-opacity="0.4"/></filter>
+            </defs>
+            <path d="M14 29 C14 29 0 16 0 7 C0 3 6.3 0 14 0 C21.7 0 28 3 28 7 C28 16 14 29 14 29Z" fill="url(#gd1)" filter="url(#shadow1)"/>
+            <ellipse cx="10" cy="5" rx="3.5" ry="3" fill="white" opacity="0.45" transform="rotate(-20 10 5)"/>
+            <text x="14" y="18" class="drop-num" font-size="11">1</text>
+          </svg>
+        </span>
+        <span class="annotation-wrap">
+          <svg width="28" height="30" viewBox="0 0 28 30"><defs><linearGradient id="gd2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffab91"/><stop offset="100%" stop-color="#bf360c"/></linearGradient></defs><path d="M14 29 C14 29 0 16 0 7 C0 3 6.3 0 14 0 C21.7 0 28 3 28 7 C28 16 14 29 14 29Z" fill="url(#gd2)"/><ellipse cx="10" cy="5" rx="3.5" ry="3" fill="white" opacity="0.45" transform="rotate(-20 10 5)"/><text x="14" y="18" class="drop-num" font-size="11">2</text></svg>
+        </span>
+        <span class="annotation-wrap">
+          <svg width="28" height="30" viewBox="0 0 28 30"><defs><linearGradient id="gd3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffab91"/><stop offset="100%" stop-color="#bf360c"/></linearGradient></defs><path d="M14 29 C14 29 0 16 0 7 C0 3 6.3 0 14 0 C21.7 0 28 3 28 7 C28 16 14 29 14 29Z" fill="url(#gd3)"/><ellipse cx="10" cy="5" rx="3.5" ry="3" fill="white" opacity="0.45" transform="rotate(-20 10 5)"/><text x="14" y="18" class="drop-num" font-size="11">3</text></svg>
+        </span>
+      </div>
+      <div class="option-label">D. 圆润大水滴（斜向渐变+投影）</div>
+      <div class="option-desc">宽大饱满的顶部 + 细短尖尾，drop-shadow 立体感</div>
+    </div>
+
+    <!-- E: 扁平露珠 -->
+    <div class="option-card" onclick="selectOption(this,'dropShape','E')" id="dropShape-E">
+      <div class="option-preview" style="gap:24px;">
+        <span class="annotation-wrap">
+          <svg width="24" height="22" viewBox="0 0 24 22">
+            <defs><radialGradient id="ge1" cx="35%" cy="30%"><stop offset="0%" stop-color="#ffccbc"/><stop offset="25%" stop-color="#ff8a65"/><stop offset="100%" stop-color="#bf360c"/></radialGradient></defs>
+            <path d="M12 21 C12 21 1 12 1 6 C1 2.5 5.9 0 12 0 C18.1 0 23 2.5 23 6 C23 12 12 21 12 21Z" fill="url(#ge1)"/>
+            <ellipse cx="8" cy="4" rx="2.5" ry="2" fill="white" opacity="0.55" transform="rotate(-20 8 4)"/>
+            <text x="12" y="13" class="drop-num" font-size="10">1</text>
+          </svg>
+        </span>
+        <span class="annotation-wrap">
+          <svg width="24" height="22" viewBox="0 0 24 22"><defs><radialGradient id="ge2" cx="35%" cy="30%"><stop offset="0%" stop-color="#ffccbc"/><stop offset="25%" stop-color="#ff8a65"/><stop offset="100%" stop-color="#bf360c"/></radialGradient></defs><path d="M12 21 C12 21 1 12 1 6 C1 2.5 5.9 0 12 0 C18.1 0 23 2.5 23 6 C23 12 12 21 12 21Z" fill="url(#ge2)"/><ellipse cx="8" cy="4" rx="2.5" ry="2" fill="white" opacity="0.55" transform="rotate(-20 8 4)"/><text x="12" y="13" class="drop-num" font-size="10">2</text></svg>
+        </span>
+      </div>
+      <div class="option-label">E. 扁平露珠（宽扁）</div>
+      <div class="option-desc">宽>高，低矮圆顶+短锥尾，叶片露珠效果</div>
+    </div>
+
+    <!-- F: 小水珠 -->
+    <div class="option-card" onclick="selectOption(this,'dropShape','F')" id="dropShape-F">
+      <div class="option-preview" style="gap:24px;">
+        <span class="annotation-wrap">
+          <svg width="18" height="22" viewBox="0 0 18 22">
+            <defs><linearGradient id="gf1" x1="0%" y1="0%" x2="20%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="25%" stop-color="#ffab91"/><stop offset="100%" stop-color="#bf360c"/></linearGradient></defs>
+            <path d="M9 21 C9 21 0 11 0 5 C0 2.2 4 0 9 0 C14 0 18 2.2 18 5 C18 11 9 21 9 21Z" fill="url(#gf1)"/>
+            <text x="9" y="13" class="drop-num" font-size="9">1</text>
+          </svg>
+        </span>
+        <span class="annotation-wrap">
+          <svg width="18" height="22" viewBox="0 0 18 22"><defs><linearGradient id="gf2" x1="0%" y1="0%" x2="20%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="25%" stop-color="#ffab91"/><stop offset="100%" stop-color="#bf360c"/></linearGradient></defs><path d="M9 21 C9 21 0 11 0 5 C0 2.2 4 0 9 0 C14 0 18 2.2 18 5 C18 11 9 21 9 21Z" fill="url(#gf2)"/><text x="9" y="13" class="drop-num" font-size="9">2</text></svg>
+        </span>
+        <span class="annotation-wrap">
+          <svg width="18" height="22" viewBox="0 0 18 22"><defs><linearGradient id="gf3" x1="0%" y1="0%" x2="20%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="25%" stop-color="#ffab91"/><stop offset="100%" stop-color="#bf360c"/></linearGradient></defs><path d="M9 21 C9 21 0 11 0 5 C0 2.2 4 0 9 0 C14 0 18 2.2 18 5 C18 11 9 21 9 21Z" fill="url(#gf3)"/><text x="9" y="13" class="drop-num" font-size="9">3</text></svg>
+        </span>
+      </div>
+      <div class="option-label">F. 小水珠（顶白渐变）</div>
+      <div class="option-desc">顶部白色高光直接融入深橙底部，真实折射效果</div>
+    </div>
+
+  </div>
+
+  <!-- 动画效果 -->
+  <h3 style="margin:24px 0 10px;font-size:15px;">1.2 动画效果</h3>
+  <div class="option-grid option-grid-3">
+
+    <div class="option-card" onclick="selectOption(this,'dropAnim','pulse-shadow')" id="dropAnim-pulse-shadow">
+      <div class="option-preview pulse-shadow" style="gap:20px;">
+       <span class="annotation-wrap"><svg width="24" height="30" viewBox="0 0 24 30"><defs><radialGradient id="ga_p1" cx="35%" cy="30%"><stop offset="0%" stop-color="#ff8a65"/><stop offset="100%" stop-color="#d84315"/></radialGradient></defs><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#ga_p1)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" class="drop-num" font-size="10">1</text></svg></span>
+       <span class="annotation-wrap"><svg width="24" height="30" viewBox="0 0 24 30"><defs><radialGradient id="ga_p2" cx="35%" cy="30%"><stop offset="0%" stop-color="#ff8a65"/><stop offset="100%" stop-color="#d84315"/></radialGradient></defs><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#ga_p2)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" class="drop-num" font-size="10">2</text></svg></span>
+      </div>
+      <div class="option-label">P1. 脉冲光晕</div>
+      <div class="option-desc">阴影周期性扩散收缩（2s），吸引注意力</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'dropAnim','pulse-scale')" id="dropAnim-pulse-scale">
+      <div class="option-preview pulse-scale" style="gap:20px;">
+       <span class="annotation-wrap"><svg width="24" height="30" viewBox="0 0 24 30"><defs><radialGradient id="gs_p1" cx="35%" cy="30%"><stop offset="0%" stop-color="#ff8a65"/><stop offset="100%" stop-color="#d84315"/></radialGradient></defs><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#gs_p1)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" class="drop-num" font-size="10">1</text></svg></span>
+       <span class="annotation-wrap"><svg width="24" height="30" viewBox="0 0 24 30"><defs><radialGradient id="gs_p2" cx="35%" cy="30%"><stop offset="0%" stop-color="#ff8a65"/><stop offset="100%" stop-color="#d84315"/></radialGradient></defs><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#gs_p2)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" class="drop-num" font-size="10">2</text></svg></span>
+      </div>
+      <div class="option-label">P2. 摆动摇晃</div>
+      <div class="option-desc">水滴轻微左右摆动（2.5s），灵动活泼</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'dropAnim','breathe')" id="dropAnim-breathe">
+      <div class="option-preview breathe" style="gap:20px;">
+       <span class="annotation-wrap"><svg width="24" height="30" viewBox="0 0 24 30"><defs><radialGradient id="gb_p1" cx="35%" cy="30%"><stop offset="0%" stop-color="#ff8a65"/><stop offset="100%" stop-color="#d84315"/></radialGradient></defs><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#gb_p1)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" class="drop-num" font-size="10">1</text></svg></span>
+       <span class="annotation-wrap"><svg width="24" height="30" viewBox="0 0 24 30"><defs><radialGradient id="gb_p2" cx="35%" cy="30%"><stop offset="0%" stop-color="#ff8a65"/><stop offset="100%" stop-color="#d84315"/></radialGradient></defs><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#gb_p2)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" class="drop-num" font-size="10">2</text></svg></span>
+      </div>
+      <div class="option-label">P3. 呼吸（透明度渐隐）</div>
+      <div class="option-desc">透明度渐隐渐现（2.5s），柔和提示不扰人</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'dropAnim','none')" id="dropAnim-none">
+      <div class="option-preview" style="gap:20px;">
+       <span class="annotation-wrap"><svg width="24" height="30" viewBox="0 0 24 30"><defs><radialGradient id="gn_p1" cx="35%" cy="30%"><stop offset="0%" stop-color="#ff8a65"/><stop offset="100%" stop-color="#d84315"/></radialGradient></defs><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#gn_p1)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" class="drop-num" font-size="10">1</text></svg></span>
+       <span class="annotation-wrap"><svg width="24" height="30" viewBox="0 0 24 30"><defs><radialGradient id="gn_p2" cx="35%" cy="30%"><stop offset="0%" stop-color="#ff8a65"/><stop offset="100%" stop-color="#d84315"/></radialGradient></defs><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#gn_p2)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" class="drop-num" font-size="10">2</text></svg></span>
+      </div>
+      <div class="option-label">P0. 无动画（静态）</div>
+      <div class="option-desc">纯静态水珠，不分散注意力</div>
+    </div>
+  </div>
+
+  <!-- 色系 -->
+  <h3 style="margin:24px 0 10px;font-size:15px;">1.3 标注点色系</h3>
+  <div class="option-grid option-grid-3">
+
+    <div class="option-card" onclick="selectOption(this,'dropColor','orange')" id="dropColor-orange">
+      <div class="option-preview" style="gap:20px;">
+       <span class="annotation-wrap"><svg width="24" height="30" viewBox="0 0 24 30"><defs><radialGradient id="go1" cx="35%" cy="30%"><stop offset="0%" stop-color="#ff8a65"/><stop offset="100%" stop-color="#d84315"/></radialGradient></defs><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#go1)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" class="drop-num" font-size="10">1</text></svg></span>
+       <span class="annotation-wrap"><svg width="24" height="30" viewBox="0 0 24 30"><defs><radialGradient id="go2" cx="35%" cy="30%"><stop offset="0%" stop-color="#ff8a65"/><stop offset="100%" stop-color="#d84315"/></radialGradient></defs><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#go2)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" class="drop-num" font-size="10">2</text></svg></span>
+      </div>
+      <div class="option-label">橙色系（默认）</div>
+      <div class="option-desc">温暖醒目 #ff5722，与大多数 UI 配色不冲突</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'dropColor','blue')" id="dropColor-blue">
+      <div class="option-preview" style="gap:20px;">
+       <span class="annotation-wrap"><svg width="24" height="30" viewBox="0 0 24 30"><defs><radialGradient id="gbu1" cx="35%" cy="30%"><stop offset="0%" stop-color="#42a5f5"/><stop offset="100%" stop-color="#0d47a1"/></radialGradient></defs><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#gbu1)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" class="drop-num" font-size="10">1</text></svg></span>
+       <span class="annotation-wrap"><svg width="24" height="30" viewBox="0 0 24 30"><defs><radialGradient id="gbu2" cx="35%" cy="30%"><stop offset="0%" stop-color="#42a5f5"/><stop offset="100%" stop-color="#0d47a1"/></radialGradient></defs><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#gbu2)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" class="drop-num" font-size="10">2</text></svg></span>
+      </div>
+      <div class="option-label">蓝色系</div>
+      <div class="option-desc">专业冷静 #1565c0，与说明卡片标题色一致</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'dropColor','red')" id="dropColor-red">
+      <div class="option-preview" style="gap:20px;">
+       <span class="annotation-wrap"><svg width="24" height="30" viewBox="0 0 24 30"><defs><radialGradient id="gr1" cx="35%" cy="30%"><stop offset="0%" stop-color="#ef5350"/><stop offset="100%" stop-color="#b71c1c"/></radialGradient></defs><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#gr1)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" class="drop-num" font-size="10">1</text></svg></span>
+       <span class="annotation-wrap"><svg width="24" height="30" viewBox="0 0 24 30"><defs><radialGradient id="gr2" cx="35%" cy="30%"><stop offset="0%" stop-color="#ef5350"/><stop offset="100%" stop-color="#b71c1c"/></radialGradient></defs><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#gr2)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" class="drop-num" font-size="10">2</text></svg></span>
+      </div>
+      <div class="option-label">红色系</div>
+      <div class="option-desc">紧急/警告感 #c62828，适合标注需要重点关注的项</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- TAB: 连线样式 -->
+<!-- ════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-title">↗ 二、连线样式（标注点 → 说明面板）</div>
+  <div class="section-desc">连线从页面中的标注点出发，指向右侧说明面板中对应的说明卡片。</div>
+
+  <div class="option-grid option-grid-3">
+    <div class="option-card" onclick="selectOption(this,'lineStyle','bezier-dash')" id="lineStyle-bezier-dash">
+      <div class="option-preview">
+        <div class="connection-demo">
+          <svg viewBox="0 0 380 100">
+            <defs><radialGradient id="l1g" cx="35%" cy="30%"><stop offset="0%" stop-color="#ff8a65"/><stop offset="100%" stop-color="#d84315"/></radialGradient></defs>
+            <g transform="translate(8,24) scale(0.6)"><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#l1g)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" font-size="10" fill="#fff" font-weight="700" text-anchor="middle">1</text></g>
+            <path class="l1" d="M 25 50 C 95 50, 175 20, 315 30"/>
+            <rect x="305" y="18" width="70" height="24" rx="4" fill="#E3F2FD" stroke="#1976D2" stroke-width="1"/>
+            <text x="340" y="34" text-anchor="middle" font-size="9" fill="#1976D2">功能说明</text>
+          </svg>
+        </div>
+      </div>
+      <div class="option-label">L1. 贝塞尔曲线 + 虚线流动</div>
+      <div class="option-desc">优美弧线，虚线带流动动画，动态优雅</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'lineStyle','bezier-solid')" id="lineStyle-bezier-solid">
+      <div class="option-preview">
+        <div class="connection-demo">
+          <svg viewBox="0 0 380 100">
+            <defs><radialGradient id="l2g" cx="35%" cy="30%"><stop offset="0%" stop-color="#ff8a65"/><stop offset="100%" stop-color="#d84315"/></radialGradient></defs>
+            <g transform="translate(8,24) scale(0.6)"><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#l2g)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" font-size="10" fill="#fff" font-weight="700" text-anchor="middle">1</text></g>
+            <path d="M 25 50 C 95 50, 175 20, 315 30" fill="none" stroke="#ff5722" stroke-width="1.5" opacity="0.6"/>
+            <rect x="305" y="18" width="70" height="24" rx="4" fill="#E3F2FD" stroke="#1976D2" stroke-width="1"/>
+            <text x="340" y="34" text-anchor="middle" font-size="9" fill="#1976D2">功能说明</text>
+          </svg>
+        </div>
+      </div>
+      <div class="option-label">L2. 贝塞尔曲线 + 实线</div>
+      <div class="option-desc">温和弧线，半透明实线简洁不抢眼</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'lineStyle','straight-dash')" id="lineStyle-straight-dash">
+      <div class="option-preview">
+        <div class="connection-demo">
+          <svg viewBox="0 0 380 100">
+            <defs><radialGradient id="l3g" cx="35%" cy="30%"><stop offset="0%" stop-color="#ff8a65"/><stop offset="100%" stop-color="#d84315"/></radialGradient></defs>
+            <g transform="translate(8,24) scale(0.6)"><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#l3g)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" font-size="10" fill="#fff" font-weight="700" text-anchor="middle">1</text></g>
+            <path d="M 25 50 L 305 30" fill="none" stroke="#ff5722" stroke-width="1.5" stroke-dasharray="6 3" opacity="0.7"/>
+            <rect x="305" y="18" width="70" height="24" rx="4" fill="#E3F2FD" stroke="#1976D2" stroke-width="1"/>
+            <text x="340" y="34" text-anchor="middle" font-size="9" fill="#1976D2">功能说明</text>
+          </svg>
+        </div>
+      </div>
+      <div class="option-label">L3. 直线虚线</div>
+      <div class="option-desc">简洁直接，虚线降低视觉干扰</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'lineStyle','angled-dash')" id="lineStyle-angled-dash">
+      <div class="option-preview">
+        <div class="connection-demo">
+          <svg viewBox="0 0 380 100">
+            <defs><radialGradient id="l4g" cx="35%" cy="30%"><stop offset="0%" stop-color="#ff8a65"/><stop offset="100%" stop-color="#d84315"/></radialGradient></defs>
+            <g transform="translate(8,24) scale(0.6)"><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#l4g)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" font-size="10" fill="#fff" font-weight="700" text-anchor="middle">1</text></g>
+            <path d="M 25 50 L 165 50 L 305 30" fill="none" stroke="#ff5722" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.7"/>
+            <circle cx="165" cy="50" r="2" fill="#ff5722"/>
+            <rect x="305" y="18" width="70" height="24" rx="4" fill="#E3F2FD" stroke="#1976D2" stroke-width="1"/>
+            <text x="340" y="34" text-anchor="middle" font-size="9" fill="#1976D2">功能说明</text>
+          </svg>
+        </div>
+      </div>
+      <div class="option-label">L4. 直角折线虚线</div>
+      <div class="option-desc">工程蓝图风格，转角处有小圆点</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'lineStyle','bezier-dotted')" id="lineStyle-bezier-dotted">
+      <div class="option-preview">
+        <div class="connection-demo">
+          <svg viewBox="0 0 380 100">
+            <defs><radialGradient id="l5g" cx="35%" cy="30%"><stop offset="0%" stop-color="#ff8a65"/><stop offset="100%" stop-color="#d84315"/></radialGradient></defs>
+            <g transform="translate(8,24) scale(0.6)"><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#l5g)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" font-size="10" fill="#fff" font-weight="700" text-anchor="middle">1</text></g>
+            <path d="M 25 50 C 95 50, 175 20, 315 30" fill="none" stroke="#ff5722" stroke-width="2" stroke-dasharray="1 6" stroke-linecap="round" opacity="0.6"/>
+            <rect x="305" y="18" width="70" height="24" rx="4" fill="#E3F2FD" stroke="#1976D2" stroke-width="1"/>
+            <text x="340" y="34" text-anchor="middle" font-size="9" fill="#1976D2">功能说明</text>
+          </svg>
+        </div>
+      </div>
+      <div class="option-label">L5. 贝塞尔曲线 + 圆点线</div>
+      <div class="option-desc">类似缝纫线效果，有趣的设计感</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'lineStyle','bezier-gradient')" id="lineStyle-bezier-gradient">
+      <div class="option-preview">
+        <div class="connection-demo">
+          <svg viewBox="0 0 380 100">
+            <defs>
+              <radialGradient id="l6g" cx="35%" cy="30%"><stop offset="0%" stop-color="#ff8a65"/><stop offset="100%" stop-color="#d84315"/></radialGradient>
+              <linearGradient id="l6gr" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ff5722" stop-opacity="0.8"/><stop offset="100%" stop-color="#1976d2" stop-opacity="0.4"/></linearGradient>
+            </defs>
+            <g transform="translate(8,24) scale(0.6)"><path d="M12 29 C12 29 0 16 0 8 C0 3.6 5.4 0 12 0 C18.6 0 24 3.6 24 8 C24 16 12 29 12 29Z" fill="url(#l6g)"/><ellipse cx="8" cy="5" rx="3" ry="2.5" fill="white" opacity="0.45" transform="rotate(-15 8 8)"/><text x="12" y="11" font-size="10" fill="#fff" font-weight="700" text-anchor="middle">1</text></g>
+            <path d="M 25 50 C 95 50, 175 20, 315 30" fill="none" stroke="url(#l6gr)" stroke-width="2" stroke-dasharray="8 4"/>
+            <rect x="305" y="18" width="70" height="24" rx="4" fill="#E3F2FD" stroke="#1976D2" stroke-width="1"/>
+            <text x="340" y="34" text-anchor="middle" font-size="9" fill="#1976D2">功能说明</text>
+          </svg>
+        </div>
+      </div>
+      <div class="option-label">L6. 渐变连线（橙→蓝过渡）</div>
+      <div class="option-desc">从标注点橙色渐变到说明蓝色，视觉过渡自然</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- TAB: 说明卡片 -->
+<!-- ════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-title">📋 三、右侧说明面板 - 卡片样式</div>
+  <div class="section-desc">说明面板从 .pen 文件的便签（note）节点提取内容，按 6 种类型分类展示。</div>
+
+  <h3 style="margin:16px 0 10px;font-size:15px;">3.1 分类标签样式</h3>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+    <span class="cat-tag func">📝 功能说明</span>
+    <span class="cat-tag field">📋 字段说明</span>
+    <span class="cat-tag inter">🔄 交互说明</span>
+    <span class="cat-tag warn">⚠️ 注意事项</span>
+    <span class="cat-tag tech">💻 技术备注</span>
+    <span class="cat-tag todo">✅ 待办事项</span>
+  </div>
+
+  <h3 style="margin:16px 0 10px;font-size:15px;">3.2 卡片外观</h3>
+  <div class="option-grid">
+    <div class="option-card" onclick="selectOption(this,'cardStyle','A')" id="cardStyle-A">
+      <div class="option-preview" style="flex-direction:column;align-items:stretch;gap:4px;padding:16px;">
+        <div class="info-card-demo card-a"><strong>📝 功能说明</strong><br>用户管理核心功能展示</div>
+        <div class="info-card-demo card-a green"><strong>📋 字段说明</strong><br>用户表字段定义与约束</div>
+        <div class="info-card-demo card-a purple"><strong>🔄 交互说明</strong><br>点击/编辑/删除操作流程</div>
+      </div>
+      <div class="option-label">CA. 左边框强调（经典）</div>
+      <div class="option-desc">左侧 4px 彩色边框 + 浅色背景，6 种颜色区分类型</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'cardStyle','B')" id="cardStyle-B">
+      <div class="option-preview" style="flex-direction:column;align-items:stretch;gap:4px;padding:16px;">
+        <div class="info-card-demo card-b"><strong>📝 功能说明</strong><br>用户管理核心功能展示</div>
+        <div class="info-card-demo card-b green"><strong>📋 字段说明</strong><br>用户表字段定义与约束</div>
+        <div class="info-card-demo card-b purple"><strong>🔄 交互说明</strong><br>点击/编辑/删除操作流程</div>
+      </div>
+      <div class="option-label">CB. 顶部色条</div>
+      <div class="option-desc">顶部 3px 彩色线条，白底干净极简</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'cardStyle','C')" id="cardStyle-C">
+      <div class="option-preview" style="flex-direction:column;align-items:stretch;gap:6px;padding:16px;">
+        <div class="info-card-demo card-c"><span class="card-tag blue">功能</span><strong>📝 功能说明</strong><br>用户管理核心功能展示</div>
+        <div class="info-card-demo card-c"><span class="card-tag green">字段</span><strong>📋 字段说明</strong><br>用户表字段定义与约束</div>
+        <div class="info-card-demo card-c"><span class="card-tag purple">交互</span><strong>🔄 交互说明</strong><br>点击/编辑/删除操作流程</div>
+      </div>
+      <div class="option-label">CC. 左上角彩色标签</div>
+      <div class="option-desc">卡片左上角有小色标标签，白底 + 细边框</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'cardStyle','D')" id="cardStyle-D">
+      <div class="option-preview" style="flex-direction:column;align-items:stretch;gap:4px;padding:16px;">
+        <div class="info-card-demo card-d blue"><strong>📝 功能说明</strong><br>用户管理核心功能展示</div>
+        <div class="info-card-demo card-d green"><strong>📋 字段说明</strong><br>用户表字段定义与约束</div>
+        <div class="info-card-demo card-d purple"><strong>🔄 交互说明</strong><br>点击/编辑/删除操作流程</div>
+      </div>
+      <div class="option-label">CD. 左侧色带 + 阴影卡片</div>
+      <div class="option-desc">白底卡片带微弱阴影，左侧 4px 圆角色带</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'cardStyle','E')" id="cardStyle-E">
+      <div class="option-preview" style="flex-direction:column;align-items:stretch;gap:4px;padding:16px;">
+        <div class="info-card-demo card-e"><span class="dot blue"></span><strong>功能说明</strong> — 用户管理核心功能展示</div>
+        <div class="info-card-demo card-e"><span class="dot green"></span><strong>字段说明</strong> — 用户表字段定义与约束</div>
+        <div class="info-card-demo card-e"><span class="dot purple"></span><strong>交互说明</strong> — 点击/编辑/删除操作流程</div>
+      </div>
+      <div class="option-label">CE. 紧凑型（彩色圆点 + 行内）</div>
+      <div class="option-desc">极简列表风格，适合内容较少的便签</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'cardStyle','F')" id="cardStyle-F">
+      <div class="option-preview" style="flex-direction:column;align-items:stretch;gap:4px;padding:16px;">
+        <div class="info-card-demo card-f"><strong>📝 功能说明</strong><br>用户管理核心功能展示</div>
+        <div class="info-card-demo card-f green"><strong>📋 字段说明</strong><br>用户表字段定义与约束</div>
+        <div class="info-card-demo card-f purple"><strong>🔄 交互说明</strong><br>点击/编辑/删除操作流程</div>
+      </div>
+      <div class="option-label">CF. 引用块风格（左上圆角弱化）</div>
+      <div class="option-desc">类似 Markdown 引用块，左上角圆角弱化、右下圆角突出</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- TAB: 拖拽分割线 -->
+<!-- ════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-title">↕ 四、拖拽分割线样式</div>
+  <div class="section-desc">左侧面板与中间、中间与右侧面板之间的可拖拽分割线。</div>
+
+  <div class="option-grid option-grid-3">
+    <div class="option-card" onclick="selectOption(this,'splitStyle','A')" id="splitStyle-A">
+      <div class="option-preview">
+        <div class="splitter-demo">
+          <span style="font-size:11px;color:#999;">面板</span>
+          <div class="spl-a"></div>
+          <span style="font-size:11px;color:#999;">面板</span>
+        </div>
+      </div>
+      <div class="option-label">SA. 细灰线（4px）</div>
+      <div class="option-desc">极简灰色实线，hover 变蓝</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'splitStyle','B')" id="splitStyle-B">
+      <div class="option-preview">
+        <div class="splitter-demo">
+          <span style="font-size:11px;color:#999;">面板</span>
+          <div class="spl-b"></div>
+          <span style="font-size:11px;color:#999;">面板</span>
+        </div>
+      </div>
+      <div class="option-label">SB. 圆角凹槽（6px）</div>
+      <div class="option-desc">稍宽圆角，带浅边框，类似 IDE 分割线</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'splitStyle','C')" id="splitStyle-C">
+      <div class="option-preview">
+        <div class="splitter-demo">
+          <span style="font-size:11px;color:#999;">面板</span>
+          <div class="spl-c"></div>
+          <span style="font-size:11px;color:#999;">面板</span>
+        </div>
+      </div>
+      <div class="option-label">SC. 细蓝色（3px）</div>
+      <div class="option-desc">主题蓝色半透明细线，视觉与设计统一</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'splitStyle','D')" id="splitStyle-D">
+      <div class="option-preview">
+        <div class="splitter-demo">
+          <span style="font-size:11px;color:#999;">面板</span>
+          <div class="spl-d"></div>
+          <span style="font-size:11px;color:#999;">面板</span>
+        </div>
+      </div>
+      <div class="option-label">SD. 虚线纹理（8px）</div>
+      <div class="option-desc">虚点纹理装饰，明确提示可拖拽</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- TAB: 字体调整控件 -->
+<!-- ════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-title">🔤 五、说明面板字体调整控件</div>
+  <div class="section-desc">在右侧说明面板顶部放置 A⁻/A⁺ 按钮，调整面板内容字体大小。</div>
+
+  <div class="option-grid option-grid-3">
+    <div class="option-card" onclick="selectOption(this,'fontCtrl','A')" id="fontCtrl-A">
+      <div class="option-preview">
+        <div class="font-ctrl font-a">
+          <button>A⁻</button>
+          <span style="font-size:12px;color:#999;">14px</span>
+          <button>A⁺</button>
+        </div>
+      </div>
+      <div class="option-label">FA. 小方块按钮</div>
+      <div class="option-desc">22×22 方形按钮，紧凑</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'fontCtrl','B')" id="fontCtrl-B">
+      <div class="option-preview">
+        <div class="font-ctrl font-b">
+          <button>A⁻</button>
+          <span style="font-size:12px;color:#999;margin:0 4px;">14px</span>
+          <button>A⁺</button>
+        </div>
+      </div>
+      <div class="option-label">FB. 圆形按钮</div>
+      <div class="option-desc">26×26 圆形，现代风格</div>
+    </div>
+
+    <div class="option-card" onclick="selectOption(this,'fontCtrl','C')" id="fontCtrl-C">
+      <div class="option-preview">
+        <div class="font-ctrl font-c">
+          <button>A⁻ 缩小</button>
+          <span style="font-size:12px;color:#999;">14px</span>
+          <button>放大 A⁺</button>
+        </div>
+      </div>
+      <div class="option-label">FC. 胶囊按钮（带文字）</div>
+      <div class="option-desc">左右分布，带"缩小/放大"文字，更直观</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- 确认按钮 -->
+<!-- ════════════════════════════════════════════ -->
+<div class="btn-actions">
+  <button class="btn btn-secondary" onclick="resetAll()">🔄 重置选择</button>
+  <button class="btn btn-primary" onclick="confirmSelection()">✅ 确认选择，生成参考文件</button>
+</div>
+
+</div> <!-- .main -->
+
+<script>
+// ─── 默认选中项 ───
+const defaults = {
+  dropShape: 'A',
+  dropAnim: 'pulse-shadow',
+  dropColor: 'orange',
+  lineStyle: 'bezier-dash',
+  cardStyle: 'A',
+  splitStyle: 'A',
+  fontCtrl: 'A',
+};
+const current = { ...defaults };
+
+const LABELS = {
+  dropShape: { A:'经典泪滴(渐变+高光)', B:'修长水滴(高挑)', C:'透明水滴(玻璃质感)', D:'圆润大水滴(斜向渐变)', E:'扁平露珠(宽扁形)', F:'小水珠(顶白渐变)' },
+  dropAnim: { 'pulse-shadow':'脉冲光晕', 'pulse-scale':'缩放脉冲', 'breathe':'呼吸效果', 'none':'无动画' },
+  dropColor: { orange:'橙色系', blue:'蓝色系', red:'红色系' },
+  lineStyle: { 'bezier-dash':'贝塞尔+虚线流动', 'bezier-solid':'贝塞尔+实线', 'straight-dash':'直线虚线', 'angled-dash':'直角折线', 'bezier-dotted':'贝塞尔+圆点', 'bezier-gradient':'渐变连线' },
+  cardStyle: { A:'左边框强调', B:'顶部色条', C:'左上角标签', D:'左侧色带+阴影', E:'紧凑型圆点', F:'引用块风格' },
+  splitStyle: { A:'细灰线', B:'圆角凹槽', C:'细蓝色', D:'虚线纹理' },
+  fontCtrl: { A:'小方块', B:'圆形', C:'胶囊带文字' },
+};
+
+function selectOption(el, group, value) {
+  // Deselect all in group
+  document.querySelectorAll(`[id^="${group}-"]`).forEach(c => c.classList.remove('selected'));
+  // Select this
+  el.classList.add('selected');
+  current[group] = value;
+  updateSummary();
+}
+
+function updateSummary() {
+  document.getElementById('sumDrop').textContent = `${LABELS.dropShape[current.dropShape]} + ${LABELS.dropColor[current.dropColor]}`;
+  document.getElementById('sumAnim').textContent = LABELS.dropAnim[current.dropAnim];
+  document.getElementById('sumCard').textContent = LABELS.cardStyle[current.cardStyle];
+  document.getElementById('sumLine').textContent = LABELS.lineStyle[current.lineStyle];
+  document.getElementById('sumSplit').textContent = LABELS.splitStyle[current.splitStyle];
+  document.getElementById('sumFont').textContent = LABELS.fontCtrl[current.fontCtrl];
+}
+
+function resetAll() {
+  Object.entries(defaults).forEach(([group, value]) => {
+    document.querySelectorAll(`[id^="${group}-"]`).forEach(c => c.classList.remove('selected'));
+    const target = document.getElementById(`${group}-${value}`);
+    if (target) { target.classList.add('selected'); current[group] = value; }
+  });
+  updateSummary();
+}
+
+function confirmSelection() {
+  // Build result
+  const result = {
+    水滴形状: LABELS.dropShape[current.dropShape],
+    水滴色系: LABELS.dropColor[current.dropColor],
+    动画效果: LABELS.dropAnim[current.dropAnim],
+    连线风格: LABELS.lineStyle[current.lineStyle],
+    卡片样式: LABELS.cardStyle[current.cardStyle],
+    分割线: LABELS.splitStyle[current.splitStyle],
+    字体控件: LABELS.fontCtrl[current.fontCtrl],
+  };
+
+  // Show confirm dialog
+  const lines = Object.entries(result).map(([k,v]) => `  ${k}：${v}`).join('\n');
+  const confirmed = confirm(`确认以下选择？\n\n${lines}\n\n点击"确定"后，我会根据这些样式生成参考文件。`);
+
+  if (confirmed) {
+    // Output JSON to be used by the skill
+    const json = JSON.stringify({ selections: current, labels: result }, null, 2);
+    console.log('SELECTION_RESULT:', json);
+
+    // Copy to clipboard-like display
+    const pre = document.createElement('pre');
+    pre.style.cssText = 'position:fixed;top:10%;left:10%;right:10%;bottom:10%;background:#1e1e1e;color:#d4d4d4;padding:24px;border-radius:12px;overflow:auto;z-index:9999;font-size:13px;white-space:pre-wrap;';
+    pre.textContent = '✅ 已确认选择！请将以下 JSON 告诉 AI：\n\n' + json;
+    document.body.appendChild(pre);
+    pre.addEventListener('click', () => pre.remove());
+  }
+}
+
+// ─── Init defaults ───
+resetAll();
+</script>
+
+</body>
+</html>

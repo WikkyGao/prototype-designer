@@ -1,0 +1,85 @@
+{
+  "version": "1.1.0",
+  "libraryFile": "lib.pen",
+  "lastUpdated": "2026-04-24T18:14:00Z",
+  "categories": [
+    {"id": "basic", "name": "基础", "prefix": "btn-", "description": "基础交互组件"},
+    {"id": "form", "name": "表单", "prefix": "input-", "description": "表单输入组件"},
+    {"id": "layout", "name": "布局", "prefix": "card-", "description": "页面布局组件"},
+    {"id": "navigation", "name": "导航", "prefix": "nav-", "description": "导航相关组件"},
+    {"id": "data-display", "name": "数据展示", "prefix": "table-", "description": "数据可视化组件"},
+    {"id": "feedback", "name": "反馈", "prefix": "modal-", "description": "用户反馈组件"}
+  ],
+  "components": [
+    {
+      "id": "nav-sidebar-20260424",
+      "name": "nav-sidebar",
+      "category": "navigation",
+      "nodeId": "sidebar1",
+      "description": "左侧深色导航栏，含Logo和菜单项",
+      "createdAt": "2026-04-24T18:14:00Z",
+      "usageCount": 4,
+      "tags": ["sidebar", "navigation", "dark"]
+    },
+    {
+      "id": "card-stat-20260424",
+      "name": "card-stat",
+      "category": "layout",
+      "nodeId": "statCard1",
+      "description": "统计指标卡片，含标签和数值",
+      "createdAt": "2026-04-24T18:14:00Z",
+      "usageCount": 7,
+      "tags": ["card", "stat", "dashboard"]
+    },
+    {
+      "id": "btn-primary-20260424",
+      "name": "btn-primary",
+      "category": "basic",
+      "nodeId": "btnCreate",
+      "description": "主要操作按钮，蓝色背景白色文字",
+      "createdAt": "2026-04-24T18:14:00Z",
+      "usageCount": 3,
+      "tags": ["button", "primary", "action"]
+    },
+    {
+      "id": "input-search-20260424",
+      "name": "input-search",
+      "category": "form",
+      "nodeId": "searchBox",
+      "description": "搜索输入框，带搜索图标和防抖",
+      "createdAt": "2026-04-24T18:14:00Z",
+      "usageCount": 2,
+      "tags": ["input", "search", "debounce"]
+    },
+    {
+      "id": "select-dropdown-20260424",
+      "name": "select-dropdown",
+      "category": "form",
+      "nodeId": "filterIndustry",
+      "description": "下拉选择器，含占位文字和箭头",
+      "createdAt": "2026-04-24T18:14:00Z",
+      "usageCount": 6,
+      "tags": ["select", "dropdown", "filter"]
+    },
+    {
+      "id": "switch-toggle-20260424",
+      "name": "switch-toggle",
+      "category": "form",
+      "nodeId": "fieldReset",
+      "description": "开关切换组件",
+      "createdAt": "2026-04-24T18:14:00Z",
+      "usageCount": 1,
+      "tags": ["switch", "toggle"]
+    },
+    {
+      "id": "table-data-20260424",
+      "name": "table-data",
+      "category": "data-display",
+      "nodeId": "tableContent",
+      "description": "数据表格，含表头和数据行",
+      "createdAt": "2026-04-24T18:14:00Z",
+      "usageCount": 2,
+      "tags": ["table", "data", "list"]
+    }
+  ]
+}
