@@ -1,0 +1,56 @@
+{
+  "name": "pencil-designer",
+  "display_name": "Pencil 页面设计技能",
+  "version": "3.7.0",
+  "description": "Pencil 页面设计 Skill，用于创建/修改 .pen 文件、管理组件库、生成可交互 HTML 原型。CLI 优先快速出图，MCP Interactive 兜底精细控制。",
+  "description_en": "Pencil page design skill for creating/editing .pen files, managing component libraries, and generating interactive HTML prototypes. CLI-first for speed, MCP Interactive for fine-grained control.",
+  "author": {
+    "name": "WikkyGao",
+    "email": "",
+    "url": ""
+  },
+  "license": "MIT",
+  "homepage": "",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:WikkyGao/pencil-designer.git"
+  },
+  "tags": ["design", "ui", "pencil", "page-design", "component-library", "prototype", "mcp"],
+  "triggers": ["Pencil设计", "页面设计", "生成原型", "pen文件", "组件库", "UI设计"],
+  "platform": "atomcode",
+  "min_agent_version": "1.0.0",
+  "work_modes": ["cli", "mcp-interactive"],
+  "supported_formats": [
+    {"format": "Pencil", "extensions": [".pen"], "priority": 1},
+    {"format": "HTML", "extensions": [".html"], "priority": 2},
+    {"format": "JSON", "extensions": [".json"], "priority": 3}
+  ],
+  "output": {
+    "formats": [".pen", ".png", ".jpeg", ".webp", ".pdf", ".html"],
+    "prototype": "单文件可交互 HTML"
+  },
+  "dependencies": {
+    "required": {
+      "node": ">= 18",
+      "@pencil.dev/cli": "npm install -g @pencil.dev/cli"
+    },
+    "optional": {}
+  },
+  "features": [
+    "CLI 优先快速出图",
+    "MCP Interactive 精细控制",
+    "组件库配置管理",
+    "双向同步与完整性校验",
+    "可交互原型生成",
+    "便签文档生成",
+    "批量处理",
+    "多格式导出"
+  ],
+  "changelog": [
+    {
+      "version": "3.7.0",
+      "date": "2026-06-25",
+      "changes": ["CLI/MCP 双模式", "组件库管理", "原型生成", "6 步完整性校验"]
+    }
+  ]
+}
