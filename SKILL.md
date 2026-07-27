@@ -1,5 +1,8 @@
 ---
 name: pencil-designer
+slug: pencil-designer
+displayName: pencil-designer
+
 version: 3.7.0
 description: Pencil 页面设计 Skill，用于创建/修改 .pen 文件、管理组件库、生成可交互 HTML 原型。CLI 优先快速出图，MCP Interactive 兜底精细控制。支持按需校验、context 补录和原型生成。用户提到 Pencil 设计、生成 .pen 文件、页面/UI 设计、组件库管理或 HTML 原型时应使用此 skill。
 author: AI Agent Team
@@ -59,6 +62,7 @@ triggers:
 5. 如果未认证，提示 `pencil login` 或设置 `PENCIL_CLI_KEY`
 
 **安装失败处理**:
+
 - `npm install -g` 失败 → 检查 npm 权限和网络
 - Node.js 版本过低 → 提示升级到 18+
 - 命令超时（>15 秒无响应）→ 检查网络/VPN，重试；仍失败则提示手动检查
@@ -115,29 +119,29 @@ exit()
 
 ### CLI 核心命令参考
 
-| 命令 | 说明 |
-|------|------|
-| `pencil version` | 检查 CLI 版本 |
-| `pencil status` | 检查认证状态 |
-| `pencil login` | 交互式登录 |
+| 命令                                      | 说明           |
+| --------------------------------------- | ------------ |
+| `pencil version`                        | 检查 CLI 版本    |
+| `pencil status`                         | 检查认证状态       |
+| `pencil login`                          | 交互式登录        |
 | `pencil --out <file> --prompt "<text>"` | Agent 模式生成设计 |
-| `pencil interactive -o <file>` | 启动交互式 Shell |
-| `pencil --in <file> --export <img>` | 导出设计为图片 |
-| `pencil --list-models` | 列出可用 AI 模型 |
+| `pencil interactive -o <file>`          | 启动交互式 Shell  |
+| `pencil --in <file> --export <img>`     | 导出设计为图片      |
+| `pencil --list-models`                  | 列出可用 AI 模型   |
 
 ### Interactive Shell 内置工具
 
-| 工具 | 说明 |
-|------|------|
-| `batch_design` | 插入、更新、删除、移动、复制、替换节点 |
-| `batch_get` | 按模式或 ID 搜索和读取节点 |
-| `get_editor_state` | 获取文档元数据和结构 |
-| `get_guidelines` | 加载设计指南和样式 |
-| `get_variables` / `set_variables` | 读写设计变量 |
-| `get_screenshot` | 将节点渲染为图片 |
-| `export_nodes` | 导出节点为 PNG/JPEG/WEBP/PDF |
-| `snapshot_layout` | 获取文档布局结构 |
-| `save()` | 保存到磁盘 |
+| 工具                                | 说明                      |
+| --------------------------------- | ----------------------- |
+| `batch_design`                    | 插入、更新、删除、移动、复制、替换节点     |
+| `batch_get`                       | 按模式或 ID 搜索和读取节点         |
+| `get_editor_state`                | 获取文档元数据和结构              |
+| `get_guidelines`                  | 加载设计指南和样式               |
+| `get_variables` / `set_variables` | 读写设计变量                  |
+| `get_screenshot`                  | 将节点渲染为图片                |
+| `export_nodes`                    | 导出节点为 PNG/JPEG/WEBP/PDF |
+| `snapshot_layout`                 | 获取文档布局结构                |
+| `save()`                          | 保存到磁盘                   |
 
 ### 工具选择策略
 
@@ -160,18 +164,18 @@ MCP 适用：精确控制节点属性、引用已有组件、分批构建复杂�
 Step 0 环境校验 → Step 1 CLI 检查 → Step 2 PRD.md → [可选] Step 4 校验 → Step 5 组件查找 → Step 6 页面设计 → [可选] Step 6b Context → [可选] Step 7-8 组件提取 → [可选] Step 9 原型生成
 ```
 
-| 步骤 | 默认 | 引用 |
-|------|------|------|
-| 0. 环境校验 | 强制 | 本文件 |
-| 1. CLI 可用性 | 强制 | 本文件 |
-| 2. PRD.md 检查 | 强制 | 本文件 |
-| 3. 设计规范文件 | 强制 | 本文件 |
-| 4. 校验环境 | **可选** | [config-management.md](references/config-management.md) |
-| 5. 组件查找 | 默认 | 本文件 |
-| 6. 页面设计 | 强制 | 本文件 |
-| 6b. Context 补录 | **可选** | [context-templates.md](references/context-templates.md) |
-| 7-8. 组件提取/更新 | **可选** | 本文件 |
-| 9. 可交互原型 | **可选** | [prototype-generation.md](references/prototype-generation.md) |
+| 步骤             | 默认     | 引用                                                            |
+| -------------- | ------ | ------------------------------------------------------------- |
+| 0. 环境校验        | 强制     | 本文件                                                           |
+| 1. CLI 可用性     | 强制     | 本文件                                                           |
+| 2. PRD.md 检查   | 强制     | 本文件                                                           |
+| 3. 设计规范文件      | 强制     | 本文件                                                           |
+| 4. 校验环境        | **可选** | [config-management.md](references/config-management.md)       |
+| 5. 组件查找        | 默认     | 本文件                                                           |
+| 6. 页面设计        | 强制     | 本文件                                                           |
+| 6b. Context 补录 | **可选** | [context-templates.md](references/context-templates.md)       |
+| 7-8. 组件提取/更新   | **可选** | 本文件                                                           |
+| 9. 可交互原型       | **可选** | [prototype-generation.md](references/prototype-generation.md) |
 
 ---
 
@@ -198,6 +202,7 @@ pencil status
 ## 步骤 4: 校验环境（可选）
 
 默认跳过。以下场景需要执行：
+
 - 首次使用 Skill
 - 组件库较大或多人协作
 - 怀疑配置与设计文件不一致
@@ -251,6 +256,7 @@ pencil --out page.pen --prompt "Create a login page with:
 ## 步骤 6b: Context 补录（可选）
 
 默认跳过。以下场景需要执行：
+
 - 需要生成可交互原型
 - 组件交付给开发团队
 - 用户明确要求
@@ -270,21 +276,24 @@ pencil --out page.pen --prompt "Create a login page with:
 ```
 
 **发现新增交互时 AskUserQuestion**: "发现以下新增交互未在 PRD.md 中：
+
 - btn-delete: DELETE /api/users/{{id}}
 - filter-toggle: 展开高级筛选
-是否更新 PRD.md？[1] 全部写入 [2] 仅指定项 [3] 跳过"
+  是否更新 PRD.md？[1] 全部写入 [2] 仅指定项 [3] 跳过"
 
 ## 步骤 7-8: 组件提取与控件库更新（可选）
 
 默认不提取。以下场景执行：创建通用组件库、用户明确要求。
 
 **可复用性判断标准**（满足 3 条以上标记为 `reusable: true`）：
+
 1. 多页面使用潜力 — 通用性，非特定场景专用
 2. 独立完整功能 — 可独立工作，有明确交互/展示目的
 3. 可参数定制 — 有可变属性（文本、颜色、尺寸等）
 4. 结构完整性 — 完整节点树，非碎片化单一元素
 
 **控件库更新**:
+
 1. 打开 `控件库.pen`（按优先级：`控件库.pen` > `lib.pen` > `component.lib`）
 2. 标记 `reusable: true`，按规范命名
 3. 生成唯一 ID，确定分类，写入 `components.json`
@@ -299,6 +308,7 @@ pencil --out page.pen --prompt "Create a login page with:
 **前提**: 步骤 6b context 补录验证通过。
 
 **执行流程**:
+
 1. `batch_get` 读取 .pen 所有页面和子节点（`readDepth: 4`），收集 context 和 note
 2. 验证 context 完整性
 3. 解析 context → 建立交互映射表
