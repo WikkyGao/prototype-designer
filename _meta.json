@@ -1,9 +1,9 @@
 {
   "name": "pencil-designer",
-  "display_name": "Pencil 页面设计技能",
-  "version": "3.7.0",
-  "description": "Pencil 页面设计 Skill，用于创建/修改 .pen 文件、管理组件库、生成可交互 HTML 原型。CLI 优先快速出图，MCP Interactive 兜底精细控制。",
-  "description_en": "Pencil page design skill for creating/editing .pen files, managing component libraries, and generating interactive HTML prototypes. CLI-first for speed, MCP Interactive for fine-grained control.",
+  "display_name": "pen.dev 页面设计技能",
+  "version": "4.0.0",
+  "description": "pen.dev（原 Pencil）页面设计 Skill，用于创建/修改 .pen 文件、管理组件库、生成可交互 HTML 原型。CLI Agent 模式优先快速出图，MCP execute 精细控制，browser 把真实网页转设计。",
+  "description_en": "pen.dev (formerly Pencil) page design skill for creating/editing .pen files, managing component libraries, and generating interactive HTML prototypes. CLI-first for speed, MCP execute for fine-grained control, browser for web-to-design.",
   "author": {
     "name": "WikkyGao",
     "email": "",
@@ -15,13 +15,13 @@
     "type": "git",
     "url": "git@github.com:WikkyGao/pencil-designer.git"
   },
-  "tags": ["design", "ui", "pencil", "page-design", "component-library", "prototype", "mcp"],
-  "triggers": ["Pencil设计", "页面设计", "生成原型", "pen文件", "组件库", "UI设计"],
+  "tags": ["design", "ui", "pencil", "pen-dev", "page-design", "component-library", "prototype", "mcp"],
+  "triggers": ["Pencil设计", "pen.dev设计", "页面设计", "生成原型", "pen文件", "组件库", "UI设计", "网页转设计"],
   "platform": "atomcode",
   "min_agent_version": "1.0.0",
   "work_modes": ["cli", "mcp-interactive"],
   "supported_formats": [
-    {"format": "Pencil", "extensions": [".pen"], "priority": 1},
+    {"format": "pen.dev", "extensions": [".pen"], "priority": 1},
     {"format": "HTML", "extensions": [".html"], "priority": 2},
     {"format": "JSON", "extensions": [".json"], "priority": 3}
   ],
@@ -32,21 +32,27 @@
   "dependencies": {
     "required": {
       "node": ">= 18",
-      "@pencil.dev/cli": "npm install -g @pencil.dev/cli"
+      "@pen.dev/cli": "npm install -g @pen.dev/cli"
     },
     "optional": {}
   },
   "features": [
-    "CLI 优先快速出图",
-    "MCP Interactive 精细控制",
+    "CLI Agent 模式优先快速出图",
+    "MCP execute 精细控制",
+    "browser 网页转设计",
     "组件库配置管理",
     "双向同步与完整性校验",
     "可交互原型生成",
     "便签文档生成",
     "批量处理",
-    "多格式导出"
+    "多格式导出（含 HTML 导出）"
   ],
   "changelog": [
+    {
+      "version": "4.0.0",
+      "date": "2026-08-31",
+      "changes": ["Pencil→pen.dev 更名（命令 pen、包 @pen.dev/cli、环境变量 PEN_*）", "MCP 工具从 9 个重构为 4 个（execute/get_app_state/get_guidelines/browser）", "execute 改为 JS snippet + editId/edits 失败修补", "新增 browser 网页转设计、Generate 图片/SVG、Export HTML", "新增 execute-api.md/pen-schema.md/mcp-tools.md 参考"]
+    },
     {
       "version": "3.7.0",
       "date": "2026-06-25",

@@ -1,26 +1,26 @@
 {
   "name": "pencil-designer",
-  "displayName": "Pencil 页面设计技能",
-  "version": "3.7.0",
-  "description": "Pencil 页面设计 Skill，CLI 优先快速出图，MCP Interactive 兜底精细控制",
-  "description_en": "Pencil page design skill — CLI-first for speed, MCP Interactive for fine-grained control",
+  "displayName": "pen.dev 页面设计技能",
+  "version": "4.0.0",
+  "description": "pen.dev（原 Pencil）页面设计 Skill，CLI Agent 模式优先快速出图，MCP execute 精细控制，browser 网页转设计",
+  "description_en": "pen.dev (formerly Pencil) page design skill — CLI-first for speed, MCP execute for fine-grained control, browser for web-to-design",
   "author": "WikkyGao",
   "license": "MIT",
   "type": "module",
   "private": true,
-  "keywords": ["atomcode", "skill", "pencil", "design", "ui", "prototype", "page-design"],
+  "keywords": ["atomcode", "skill", "pencil", "pen-dev", "design", "ui", "prototype", "page-design"],
   "engines": {
     "atomcode": ">=1.0.0",
     "node": ">=18"
   },
   "scripts": {
-    "test": "echo \"No npm tests; see @pencil.dev/cli for runtime\" && exit 0"
+    "test": "echo \"No npm tests; see @pen.dev/cli for runtime\" && exit 0"
   },
   "dependencies": {},
   "atomcode": {
     "skill": true,
     "main": "SKILL.md",
-    "triggers": ["Pencil设计", "页面设计", "生成原型", "pen文件", "组件库", "UI设计"],
+    "triggers": ["Pencil设计", "pen.dev设计", "页面设计", "生成原型", "pen文件", "组件库", "UI设计", "网页转设计"],
     "formats": [".pen", ".html", ".json"]
   }
 }

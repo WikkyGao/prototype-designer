@@ -188,6 +188,6 @@ unregisteredNodes = reusableNodes.filter(node => !registeredIds.includes(node.id
 
 | 场景 | 处理 |
 |------|------|
-| `pencil interactive` 启动超时 | 重试 1 次；仍失败 → 降级为纯 CLI 操作 |
-| MCP 返回 `tool_not_found` | 确认 Interactive Shell 仍在运行，必要时重启 |
-| `batch_design` 部分失败 | 检查错误信息，修复后重试 |
+| `pen interactive` 启动超时 | 重试 1 次；仍失败 → 降级为纯 CLI 操作 |
+| MCP 返回 `tool_not_found` | 确认 Interactive Shell 仍在运行、Pen.app 已启动，必要时重启 |
+| `execute` 部分失败 | 用返回 `editId` + `edits` 打补丁重试，勿重发 snippet |
