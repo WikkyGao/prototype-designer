@@ -1,9 +1,9 @@
 {
-  "name": "pencil-designer",
-  "display_name": "pen.dev 页面设计技能",
-  "version": "4.0.0",
-  "description": "pen.dev（原 Pencil）页面设计 Skill，用于创建/修改 .pen 文件、管理组件库、生成可交互 HTML 原型。CLI Agent 模式优先快速出图，MCP execute 精细控制，browser 把真实网页转设计。",
-  "description_en": "pen.dev (formerly Pencil) page design skill for creating/editing .pen files, managing component libraries, and generating interactive HTML prototypes. CLI-first for speed, MCP execute for fine-grained control, browser for web-to-design.",
+  "name": "prototype-designer",
+  "display_name": "页面设计技能（pen.dev / Axure / Figma；OpenDesign planned）",
+  "version": "5.1.0",
+  "description": "页面设计编排 Skill，采用编排层 + 适配器架构。支持 pen.dev、Axure 与 Figma：进入设计前检查 PRD、标准控件库与设计规范，再确认产出形态「原生设计文件 + HTML」或「仅 HTML」；原生工具由本 Skill 询问 Pen / Axure / Figma（OpenDesign 为 planned 占位，当前禁用）。Pen/Axure/Figma 的完整细节分别位于 adapters/pen、adapters/axure 与 adapters/figma。原型输出携带 #prototype-manifest + data-page/data-route/data-context，便于原型转前端解析。",
+  "description_en": "Page design orchestration skill with an orchestrator + adapter architecture. Supports pen.dev, Axure and Figma: checks PRD, component library and design spec, then confirms native + HTML or HTML-only; the native tool is chosen here (Pen / Axure / Figma, with OpenDesign planned and disabled). Adapter details live in adapters/pen, adapters/axure and adapters/figma.",
   "author": {
     "name": "WikkyGao",
     "email": "",
@@ -13,28 +13,101 @@
   "homepage": "",
   "repository": {
     "type": "git",
-    "url": "git@github.com:WikkyGao/pencil-designer.git"
+    "url": "git@github.com:WikkyGao/prototype-designer.git"
   },
-  "tags": ["design", "ui", "pencil", "pen-dev", "page-design", "component-library", "prototype", "mcp"],
-  "triggers": ["Pencil设计", "pen.dev设计", "页面设计", "生成原型", "pen文件", "组件库", "UI设计", "网页转设计"],
+  "tags": [
+    "design",
+    "ui",
+    "pencil",
+    "pen-dev",
+    "axure",
+    "figma-mcp",
+    "figma",
+    "zee-rp",
+    "rp1",
+    "page-design",
+    "component-library",
+    "prototype",
+    "mcp"
+  ],
+  "triggers": [
+    "Pencil设计",
+    "pen.dev设计",
+    "Axure设计",
+    "Figma MCP",
+    "Figma设计",
+    "生成.rp",
+    "RP/1",
+    "zee-rp",
+    "页面设计",
+    "生成原型",
+    "pen文件",
+    "组件库",
+    "UI设计",
+    "网页转设计"
+  ],
   "platform": "atomcode",
   "min_agent_version": "1.0.0",
-  "work_modes": ["cli", "mcp-interactive"],
+  "work_modes": [
+    "cli",
+    "mcp-interactive",
+    "html-only",
+    "axure",
+    "figma"
+  ],
   "supported_formats": [
-    {"format": "pen.dev", "extensions": [".pen"], "priority": 1},
-    {"format": "HTML", "extensions": [".html"], "priority": 2},
-    {"format": "JSON", "extensions": [".json"], "priority": 3}
+    {
+      "format": "pen.dev",
+      "extensions": [
+        ".pen"
+      ],
+      "priority": 1
+    },
+    {
+      "format": "HTML",
+      "extensions": [
+        ".html"
+      ],
+      "priority": 2
+    },
+    {
+      "format": "JSON",
+      "extensions": [
+        ".json"
+      ],
+      "priority": 3
+    },
+    {
+      "format": "Axure",
+      "extensions": [
+        ".rp"
+      ],
+      "priority": 2
+    }
   ],
   "output": {
-    "formats": [".pen", ".png", ".jpeg", ".webp", ".pdf", ".html"],
-    "prototype": "单文件可交互 HTML"
+    "formats": [
+      ".pen",
+      ".png",
+      ".jpeg",
+      ".webp",
+      ".pdf",
+      ".html",
+      ".rp"
+    ],
+    "prototype": "单文件可交互 HTML；模式 3 主交付为原生 .rp，模式 4 主交付为 Figma 云端文件，HTML 可选"
   },
   "dependencies": {
     "required": {
       "node": ">= 18",
       "@pen.dev/cli": "npm install -g @pen.dev/cli"
     },
-    "optional": {}
+    "optional": {
+      "zee-rp": "git clone https://github.com/LilZeeCN/zee-rp.git（模式 3）",
+      "python": ">= 3.10（模式 3，激活 venv）",
+      "Axure RP": "RP9 / RP11（模式 3，需本机空白模板）",
+      "Figma MCP": "接入 https://mcp.figma.com/mcp；写操作需 Full/Dev 席位"
+    }
   },
   "features": [
     "CLI Agent 模式优先快速出图",
@@ -45,18 +118,131 @@
     "可交互原型生成",
     "便签文档生成",
     "批量处理",
-    "多格式导出（含 HTML 导出）"
+    "多格式导出（含 HTML 导出）",
+    "仅 HTML 模式（无需 pen.dev 环境）",
+    "HTML 组件库管理",
+    "Axure 原生 .rp 生成与修改（zee-rp）",
+    "RP/1 原型源码（check/generate）",
+    "Axure MCP 会话链（定位/改字/改名/保存/校验）",
+    "截图转可编辑 Axure 布局",
+    "Axure 母版与 .rplib 组件复用",
+    "Figma 云端设计读取/创建（Remote MCP）",
+    "Figma 席位探测、只读降级与 figma-use 写前加载",
+    "组件与变量复用（Figma library / variables）",
+    "编排层 + 适配器架构（Pen / Axure / Figma，OpenDesign planned）",
+    "T8 只决定原生/HTML，具体工具由本 Skill 询问"
   ],
   "changelog": [
     {
+      "version": "5.1.0",
+      "date": "2026-10-22",
+      "changes": [
+        "新增模式 4（Figma）：经 Remote MCP 读取/创建云端设计，支持变量、组件库与截图",
+        "新增 adapters/figma 子技能：席位探测、figma-use 前置、file_key 管理、只读降级",
+        "适配器契约、组件库配置、原型生成与 Context 模板同步支持 Figma",
+        "产出形态与工具选择保持两步：T8 只决定原生/仅 HTML，具体工具由本 Skill 询问"
+      ]
+    },
+    {
+      "version": "5.0.0",
+      "date": "2026-10-22",
+      "changes": [
+        "完成编排层 + 适配器架构：Pen/Axure 细节迁入 adapters，父级 SKILL 保留编排与公共核心",
+        "产出确认拆分为「原生/仅 HTML」与「具体工具」两步；T8 不再询问 .pen 或具体工具",
+        "DesignRequest.adapter 可留空，由 prototype-designer 选择已就绪适配器",
+        "OpenDesign 以 planned 占位：不进入可选项，点名时返回 blocked，不提供未验证命令",
+        "新增适配器契约、注册表、调研门槛与 OpenDesign 回退测试"
+      ]
+    },
+    {
+      "version": "4.5.1",
+      "date": "2026-10-22",
+      "changes": [
+        "抽象跨客户端提问协议，兼容 AskUserQuestion / question，无工具时输出编号选项并等待",
+        "新增不可逆操作确认与交付前自检清单",
+        "精简 SKILL.md 至约 500 行，Pen/Axure 细节下沉 adapters",
+        "新增适配器契约与索引，Axure 参考/预检迁入 adapters/axure/，Pen 参考/示例迁入 adapters/pen/"
+      ]
+    },
+    {
+      "version": "4.5.0",
+      "date": "2026-10-22",
+      "changes": [
+        "新增模式 3（Axure）：经 zee-rp CLI/MCP 产出可继续在 Axure RP 中编辑的原生 .rp",
+        "支持 RP/1 源码 check/generate、已有 .rp 的 rp-read 与原生 writer、MCP 会话链、截图转布局与结构三零校验",
+        "新增 Axure 参考与环境检测（Phase 2 迁入 `adapters/axure/`）",
+        "产出形式扩展为三项；PRD、控件库、设计规范与组件库检查在三种模式下均保留"
+      ]
+    },
+    {
+      "version": "4.4.1",
+      "date": "2026-10-22",
+      "changes": [
+        "重新发布以同步 skillhub 版本记录，功能同 4.4.0"
+      ]
+    },
+    {
+      "version": "4.4.0",
+      "date": "2026-10-22",
+      "changes": [
+        "新增原型结构化交付契约：design-prototype.html 内嵌 #prototype-manifest",
+        "保留 data-page / data-route / data-context，左栏导航带 data-target，标注与说明卡共享 data-annotation-id",
+        "design-pages.html 要求 data-page 唯一、data-route 必填",
+        "下游 prototype-to-frontend 可直接按元数据解析页面与交互，无需改动其流程"
+      ]
+    },
+    {
+      "version": "4.3.0",
+      "date": "2026-10-22",
+      "changes": [
+        "对齐 pen.dev CLI 0.3.12：MCP 工具改为 5 个（execute/get_app_state/get_style/read_skill/browser），get_guidelines 已移除",
+        "get_app_state 改为无参数，schema 与 execute 文档改用 read_skill",
+        "execute 新增 description 参数；browser 新增 cdp/nodeId/method/params",
+        "CLI 新增 --library，可导入 .lib.pen 控件库（含内置 pencil:shadcn.lib.pen）",
+        "设计规范检查扩展为 design.md / tokens.json / variables.css 等多来源合并，冲突交用户确认"
+      ]
+    },
+    {
+      "version": "4.2.0",
+      "date": "2026-10-22",
+      "changes": [
+        "流程前置化：设计前固定执行 PRD.md → 标准控件库 → 设计规范 → 产出形式确认",
+        "控件库同时探测 .pen（控件库.pen/lib.pen/component.lib）与 HTML（component-library.html）两种载体",
+        "检测到已有控件库或设计规范时强制复用与遵循；缺失时询问用户，未提供则建默认并标注默认值待确认",
+        "pencil 分支明确产出 .pen + 可交互 HTML"
+      ]
+    },
+    {
+      "version": "4.1.0",
+      "date": "2026-10-22",
+      "changes": [
+        "新增仅 HTML 模式：跳过 pen CLI/MCP 环境校验，直接产出可交互 HTML 原型",
+        "仅 HTML 模式保留 PRD 检查、设计规范检查（UI Design.html）与组件库管理（component-library.html + components.json）",
+        "新增 references/html-only-mode.md，规范 HTML 设计规范、HTML 组件库与 data-context 页面约定",
+        "config-management.md 支持 HTML 组件库校验与双向同步",
+        "prototype-generation.md 支持从 design-pages.html 提取页面与交互"
+      ]
+    },
+    {
       "version": "4.0.0",
       "date": "2026-08-31",
-      "changes": ["Pencil→pen.dev 更名（命令 pen、包 @pen.dev/cli、环境变量 PEN_*）", "MCP 工具从 9 个重构为 4 个（execute/get_app_state/get_guidelines/browser）", "execute 改为 JS snippet + editId/edits 失败修补", "新增 browser 网页转设计、Generate 图片/SVG、Export HTML", "新增 execute-api.md/pen-schema.md/mcp-tools.md 参考"]
+      "changes": [
+        "Pencil→pen.dev 更名（命令 pen、包 @pen.dev/cli、环境变量 PEN_*）",
+        "MCP 工具从 9 个重构为 4 个（execute/get_app_state/get_guidelines/browser）",
+        "execute 改为 JS snippet + editId/edits 失败修补",
+        "新增 browser 网页转设计、Generate 图片/SVG、Export HTML",
+        "新增 execute-api.md/pen-schema.md/mcp-tools.md 参考"
+      ]
     },
     {
       "version": "3.7.0",
       "date": "2026-06-25",
-      "changes": ["CLI/MCP 双模式", "组件库管理", "原型生成", "6 步完整性校验"]
+      "changes": [
+        "CLI/MCP 双模式",
+        "组件库管理",
+        "原型生成",
+        "6 步完整性校验"
+      ]
     }
   ]
 }

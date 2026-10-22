@@ -10,6 +10,13 @@ context 是每个交互型节点上的不可见元数据，存储交互行为、
 
 **格式**: JSON 字符串
 
+**载体**:
+- 模式 1（.pen）：节点 `context` 属性，通过 `execute` 的 `Update` 写入
+- 模式 2（仅 HTML）：节点 `data-context` 属性，写作时内联，值同样是 JSON 字符串
+- 模式 4（Figma）：Figma 节点没有等价 `context` 字段；交互从 PRD、Figma 原型连线与用户补充信息推导，生成 HTML 时写入 `data-context`
+
+下文模板模式 1 / 2 通用，仅存放位置不同；模式 3 的原生交互写在 RP/1 `on` 中，生成 HTML 原型时再转成 `data-context`；模式 4 只在 HTML 阶段落 `data-context`，不回写 Figma。
+
 **核心字段**: `trigger`（click/change/input/submit）、`action`、`target`、`onSuccess`、`onError`、`loading`、`confirm`
 
 ---
@@ -88,7 +95,7 @@ context 是每个交互型节点上的不可见元数据，存储交互行为、
 
 ## 自动记录流程
 
-**执行时机**: 步骤 6（页面设计）完成后、步骤 7（组件提取）之前
+**执行时机**: 步骤 6（组件库管理）完成后、步骤 8（原型生成）之前
 
 1. 遍历所有交互型节点
 2. 根据节点类型匹配模板
@@ -117,7 +124,7 @@ context 是每个交互型节点上的不可见元数据，存储交互行为、
 发现新增交互（PRD.md 中未记录的）时：
 
 1. 整理差异清单
-2. **AskUserQuestion**: "发现新增交互，是否更新 PRD.md？[1] 全部写入 [2] 仅指定项 [3] 跳过"
+2. **按 SKILL.md §0.5.0 提问协议确认**: "发现新增交互，是否更新 PRD.md？[1] 全部写入 [2] 仅指定项 [3] 跳过"
 3. 修改 PRD.md（追加不覆盖）
 
 ---

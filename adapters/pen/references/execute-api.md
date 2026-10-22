@@ -1,6 +1,6 @@
 # execute API 完全参考
 
-> 对应 pen.dev CLI 0.3.5 / Pen.app 1.2.5+。内容源自官方 `read_skill({ path: "execute.md" })`。
+> 对应 pen.dev CLI 0.3.12 / Pen.app 1.2.5+。内容源自官方 `read_skill({ path: "execute.md" })`。
 > `execute` 取代了旧版的 `batch_design` + `batch_get` + `get_variables` + `set_variables` + `get_screenshot` + `export_nodes` + `snapshot_layout`。
 
 ---
@@ -10,8 +10,14 @@
 `execute` 执行一段**小型 JavaScript snippet** 来修改文档。
 
 ```
-execute({ filePath: "design.pen", input: "<JS snippet>" })
+execute({
+  filePath: "design.pen",
+  description: "Add pricing section with 3 tiers",
+  input: "<JS snippet>"
+})
 ```
+
+`description` 为 0.3.12 新增：3-8 个词的命令式短语，首字母大写、不加句号，作为用户可见的操作标签。
 
 核心心智模型：
 

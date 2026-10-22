@@ -1,6 +1,7 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "libraryFile": "lib.pen",
+  "htmlLibraryFile": "component-library.html",
   "lastUpdated": "2026-04-24T18:14:00Z",
   "categories": [
     {"id": "basic", "name": "基础", "prefix": "btn-", "description": "基础交互组件"},

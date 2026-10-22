@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0",
+  "id": "opendesign",
+  "name": "OpenDesign",
+  "version": "0.1.0",
+  "status": "planned",
+  "migrationState": "planned",
+  "nativeFormat": "TBD",
+  "htmlPolicy": "optional",
+  "requires": [],
+  "preflight": null,
+  "capabilities": {
+    "create": false,
+    "read": false,
+    "edit": false,
+    "verify": false
+  },
+  "acceptance": [],
+  "entry": "SKILL.md"
+}

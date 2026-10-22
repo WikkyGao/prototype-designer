@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.0",
+  "id": "pen",
+  "name": "pen.dev",
+  "version": "0.1.0",
+  "status": "ready",
+  "migrationState": "extracted",
+  "nativeFormat": ".pen",
+  "htmlPolicy": "required",
+  "requires": [
+    "node>=18",
+    "pen>=0.3.12",
+    "pen-auth"
+  ],
+  "preflight": null,
+  "capabilities": {
+    "create": true,
+    "read": true,
+    "edit": true,
+    "verify": true
+  },
+  "acceptance": [
+    "structural",
+    "preview"
+  ],
+  "entry": "SKILL.md"
+}

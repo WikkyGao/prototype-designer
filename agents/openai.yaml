@@ -1,5 +1,5 @@
 interface:
-  display_name: "Pencil Designer"
-  short_description: "Design Pencil .pen UI files and prototypes"
+  display_name: "页面设计 Skill（pen.dev / Axure；OpenDesign planned）"
+  short_description: "Check PRD, component library & design spec, then choose native + HTML or HTML-only; pick Pen or Axure next"
   brand_color: "#3B82F6"
-  default_prompt: "Use $pencil-designer to create a polished .pen UI design from my product requirements."
+  default_prompt: "Use $prototype-designer to design from my requirements. First check PRD.md, the standard component library and the design spec, then ask whether I want a native design file + HTML or an HTML-only prototype. If native, ask me to choose Pen or Axure; OpenDesign is planned and disabled."

@@ -1,6 +1,7 @@
 # 配置文件管理与双向同步
 
-> 管理 `components.json` 配置与设计文件 `控件库.pen` 之间的一致性。
+> 管理 `components.json` 配置与组件库文件之间的一致性。
+> 模式 1 对应 `.pen` 控件库；模式 2（仅 HTML）对应 `component-library.html`；模式 3（Axure）对应 `.rp` 母版 / `.rplib`；模式 4（Figma）对应云端 library / 已发布组件。四者共用同一份 `components.json`，用 `source` 区分。
 
 ---
 
@@ -8,8 +9,12 @@
 
 ```json
 {
-  "version": "1.0.0",
+  "version": "1.2.0",
   "libraryFile": "控件库.pen",
+  "htmlLibraryFile": "component-library.html",
+  "axureLibraryFile": "控件库.rplib",
+  "axureMasterFile": "控件库.rp",
+  "figmaFileKey": "AbCdEf123456",
   "lastUpdated": "2026-04-24T00:00:00Z",
   "categories": [
     { "id": "basic", "name": "基础", "prefix": "btn-", "description": "基础交互组件" },
@@ -25,6 +30,45 @@
       "description": "主要按钮组件",
       "createdAt": "2026-04-24T00:00:00Z",
       "usageCount": 5
+    },
+    {
+      "id": "comp-html-001",
+      "name": "btn-primary",
+      "category": "basic",
+      "source": "html",
+      "snippetId": "btn-primary",
+      "className": "btn btn-primary",
+      "dependencies": ["--color-primary", "--radius-sm"],
+      "description": "主要按钮组件（HTML 片段）",
+      "createdAt": "2026-10-22T00:00:00Z",
+      "usageCount": 2
+    },
+    {
+      "id": "comp-axure-001",
+      "name": "btn-primary",
+      "category": "basic",
+      "source": "axure",
+      "format": "axure",
+      "master": "按钮-主要",
+      "libraryFile": "控件库.rplib",
+      "widgetName": "Primary Button",
+      "description": "主要按钮组件（Axure 母版/元件库）",
+      "createdAt": "2026-10-22T00:00:00Z",
+      "usageCount": 0
+    },
+    {
+      "id": "comp-figma-001",
+      "name": "btn-primary",
+      "category": "basic",
+      "source": "figma",
+      "format": "figma",
+      "figmaFileKey": "AbCdEf123456",
+      "componentKey": "c1234567890",
+      "nodeId": "12:34",
+      "libraryName": "Design System",
+      "description": "主要按钮组件（Figma 已发布组件）",
+      "createdAt": "2026-10-22T00:00:00Z",
+      "usageCount": 0
     }
   ]
 }
@@ -36,9 +80,22 @@
 |------|------|
 | `version` | 配置文件版本号 |
 | `libraryFile` | 控件库 .pen 文件路径 |
+| `htmlLibraryFile` | HTML 组件库文件路径（模式 2） |
+| `axureLibraryFile` | Axure `.rplib` 元件库路径（模式 3） |
+| `axureMasterFile` | Axure 母版工程路径（模式 3） |
+| `figmaFileKey` | Figma 云端文件 key（模式 4） |
 | `lastUpdated` | 最后更新时间戳 |
 | `categories[].prefix` | 组件命名前缀，用于快速筛选 |
-| `components[].nodeId` | 控件库中对应的节点 ID |
+| `components[].source` | `pen` / `html` / `axure` / `figma`，缺省为 `pen` |
+| `components[].nodeId` | 模式 1：控件库中对应的节点 ID |
+| `components[].snippetId` | 模式 2：`<template data-component>` 的值 |
+| `components[].className` | 模式 2：复用时需要带上的类名 |
+| `components[].dependencies` | 模式 2：依赖的 CSS 变量 |
+| `components[].master` | 模式 3：RP/1 `masters` 或 `.rp` 中的母版名 |
+| `components[].libraryFile` + `widgetName` | 模式 3：`.rplib` 元件定位 |
+| `components[].figmaFileKey` | 模式 4：Figma 文件 key |
+| `components[].componentKey` + `nodeId` | 模式 4：已发布组件 key / 节点定位 |
+| `components[].libraryName` | 模式 4：Figma library 名称 |
 | `components[].usageCount` | 组件被引用次数 |
 
 **使用模式**:
@@ -51,8 +108,8 @@
 
 ### 配置 → .pen（验证）
 
-1. 读取 `components.json`，提取所有 `nodeId` 列表
-2. 使用 `batch_get` 批量检查节点在控件库中是否存在
+1. 读取 `components.json`，提取所有 `source: "pen"` 的 `nodeId` 列表
+2. 使用 `execute` 的 `Get({ nodeIds })` 批量检查节点在控件库中是否存在
 3. 记录不存在的 `nodeId`
 
 **结果**:
@@ -61,7 +118,7 @@
 
 ### .pen → 配置（发现）
 
-1. 使用 `batch_get` 搜索所有 `reusable: true` 的节点
+1. 使用 `execute` 的 `Get(n => n.reusable && Print(n.id, n.name))` 搜索所有可复用节点
 2. 提取节点 ID 和名称
 3. 对比 `components.json` 中的 `nodeId` 列表
 4. 记录未注册的组件
@@ -70,13 +127,39 @@
 - ✅ 全部已注册 → 同步正常
 - ❌ 存在未注册组件 → 提示添加到配置
 
+### HTML 模式同步（模式 2）
+
+**配置 → 组件库（验证）**：读取 `source: "html"` 条目的 `snippetId`，逐个在 `component-library.html` 中查找 `template[data-component="{snippetId}"]`，缺一即记为差异。
+
+**组件库 → 配置（发现）**：解析 `component-library.html` 中全部 `template[data-component]`，与配置里的 `snippetId` 对比，未登记的提示补充。
+
+**额外校验**：组件内交互节点是否有 `data-context`；`dependencies` 中的 CSS 变量是否都存在于 `UI Design.html` 的 `:root`。
+
+### Axure 模式同步（模式 3）
+
+**配置 → 母版/元件库（验证）**：
+- `master` 条目：用 `node bin/axure.mjs rp-read "$axureMasterFile" --json` 检查母版名是否存在
+- `libraryFile` + `widgetName` 条目：用 `rp-read` 检查 `.rplib` 中是否存在该元件，或按 zee-rp `clone-library-widget` 的定位方式核对
+
+**母版/元件库 → 配置（发现）**：读取 `.rp` 的 masters 与 `.rplib` 的元件清单，和 `source: "axure"` 条目比对，未登记的提示补充。
+
+**额外校验**：RP/1 `masters` 只能包含基础元件；含动态面板或中继器的母版会被 zee-rp 拒绝，应改用 `.rplib` 克隆或页面内组件。
+
+### Figma 模式同步（模式 4）
+
+**配置 → 云端（验证）**：读取 `source: "figma"` 条目的 `figmaFileKey` / `componentKey` / `nodeId`，用 `get_libraries` + `get_library_items`（或 `search_design_system`）核对组件是否仍可用；文件 key 不匹配记为差异。
+
+**云端 → 配置（发现）**：读取当前文件的已发布组件与 library 组件，和 `source: "figma"` 条目比对，未登记的提示补充；只登记已发布或可复用组件，不把普通图层当组件。
+
+**额外校验**：只读席位仍可做发现与验证，但不能创建/修改组件；`componentKey` 与 `nodeId` 至少有一个可用于定位；不把 Figma URL 当成本地文件路径。
+
 ### 冲突处理
 
 发现差异时提供三种选项：
 
 | 选项 | 适用场景 | 操作 |
 |------|---------|------|
-| 以配置为准 | 配置文件是最新的，设计文件滞后 | 删除 .pen 中未注册的组件 |
+| 以配置为准 | 配置文件是最新的，设计文件滞后 | 删除 .pen 中未注册的组件；Figma 侧只移除配置，不自动删云端组件 |
 | 以 .pen 为准 | 设计文件是最新的，配置文件滞后 | 为未注册组件生成配置记录 |
 | 手动合并 | 双方都有更新，需要人工判断 | 展示差异详情，逐项处理 |
 
@@ -114,27 +197,41 @@
 - 格式错误 → 提示修复或重建
 - 字段缺失 → 补充默认值
 
-### 步骤 2: 检查控件库.pen
+### 步骤 2: 检查组件库文件
 
-- 文件是否存在
-- 是否为有效的 .pen 文件
+模式 1：按 `控件库.pen` > `lib.pen` > `component.lib` > `*.lib.pen` 检查是否存在有效控件库文件。
+模式 2：检查 `htmlLibraryFile` 指向的 `component-library.html` 是否存在、是否能解析出 `<template data-component>`。
+模式 3：检查 `axureMasterFile` / `axureLibraryFile` 指向的 `.rp` / `.rplib` 是否存在，能否用 `rp-read` 解析。
+模式 4：检查 `figmaFileKey` 是否可从 URL 或用户输入解析，`get_libraries` / `search_design_system` 是否可访问目标组件。
 
 **失败处理**:
-- 不存在 → 创建新的控件库文件
+- 不存在 → 创建新的组件库文件（模式 2 按 [html-only-mode.md](html-only-mode.md) 的骨架创建）
 - 损坏 → 提示重建选项
 
-### 步骤 3: 验证组件 nodeId 存在性
+### 步骤 3: 验证组件标识存在性（按 source 分支）
 
 ```javascript
-nodeIds = config.components.map(comp => comp.nodeId)
-result = batch_get({ filePath: "控件库.pen", nodeIds: nodeIds, readDepth: 1 })
+// source = pen
+nodeIds = config.components.filter(c => (c.source ?? 'pen') === 'pen').map(c => c.nodeId)
+result = execute({ filePath: "控件库.pen", input: "Get(" + JSON.stringify(nodeIds) + ", {depth:1})" })
+
+// source = html
+snippetIds = config.components.filter(c => c.source === 'html').map(c => c.snippetId)
+// 在 component-library.html 中查找 template[data-component=...]，无需 pen 工具
+
+// source = axure
+// 用 rp-read 检查 master 是否存在；用 .rplib 清单核对 libraryFile + widgetName
+
+// source = figma
+// 用 get_libraries / get_library_items / search_design_system 核对 componentKey / nodeId
 ```
 
-**失败处理**: 发现缺失 nodeId → 记录差异，触发同步流程
+**失败处理**: 发现缺失 nodeId / snippetId / componentKey → 记录差异，触发同步流程
 
 ### 步骤 4: 扫描未注册组件
 
 ```javascript
+// source = html：解析 template[data-component]，与 snippetId 列表比对
 reusableNodes = batch_get({
   filePath: "控件库.pen",
   patterns: [{ reusable: true }],
@@ -143,6 +240,8 @@ reusableNodes = batch_get({
 registeredIds = config.components.map(comp => comp.nodeId)
 unregisteredNodes = reusableNodes.filter(node => !registeredIds.includes(node.id))
 ```
+
+Figma：不扫描普通图层，只对比已发布组件 / library 组件；未发布组件不自动登记。
 
 **失败处理**: 发现未注册组件 → 记录差异，触发同步流程
 

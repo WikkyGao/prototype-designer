@@ -1,26 +1,69 @@
 {
-  "name": "pencil-designer",
-  "displayName": "pen.dev 页面设计技能",
-  "version": "4.0.0",
-  "description": "pen.dev（原 Pencil）页面设计 Skill，CLI Agent 模式优先快速出图，MCP execute 精细控制，browser 网页转设计",
-  "description_en": "pen.dev (formerly Pencil) page design skill — CLI-first for speed, MCP execute for fine-grained control, browser for web-to-design",
+  "name": "prototype-designer",
+  "displayName": "页面设计技能（pen.dev / Axure / Figma；OpenDesign planned）",
+  "version": "5.1.0",
+  "description": "页面设计编排 Skill：先检查 PRD、标准控件库与设计规范，再确认产出形态（原生设计文件 + HTML 或仅 HTML）；原生工具由本 Skill 询问 Pen / Axure / Figma（OpenDesign planned）。采用编排层 + 适配器架构，原型内嵌 prototype-manifest，页面/交互可被原型转前端直接解析",
+  "description_en": "Page design skill for pen.dev, Axure and Figma — CLI-first for speed, MCP execute for fine-grained control, browser for web-to-design, zee-rp for native Axure .rp, Figma Remote MCP for cloud files",
   "author": "WikkyGao",
   "license": "MIT",
   "type": "module",
   "private": true,
-  "keywords": ["atomcode", "skill", "pencil", "pen-dev", "design", "ui", "prototype", "page-design"],
+  "keywords": [
+    "atomcode",
+    "skill",
+    "pencil",
+    "pen-dev",
+    "axure",
+    "figma-mcp",
+    "figma",
+    "zee-rp",
+    "rp1",
+    "design",
+    "ui",
+    "prototype",
+    "page-design",
+    "adapter"
+  ],
   "engines": {
     "atomcode": ">=1.0.0",
     "node": ">=18"
   },
   "scripts": {
-    "test": "echo \"No npm tests; see @pen.dev/cli for runtime\" && exit 0"
+    "test": "echo \"No npm tests; see @pen.dev/cli for runtime\" && exit 0",
+    "preflight:axure": "node adapters/axure/scripts/axure-preflight.mjs"
   },
   "dependencies": {},
   "atomcode": {
     "skill": true,
     "main": "SKILL.md",
-    "triggers": ["Pencil设计", "pen.dev设计", "页面设计", "生成原型", "pen文件", "组件库", "UI设计", "网页转设计"],
-    "formats": [".pen", ".html", ".json"]
+    "triggers": [
+      "Pencil设计",
+      "pen.dev设计",
+      "Axure设计",
+      "Figma MCP",
+      "Figma设计",
+      "生成.rp",
+      "RP/1",
+      "zee-rp",
+      "页面设计",
+      "生成原型",
+      "pen文件",
+      "组件库",
+      "UI设计",
+      "网页转设计"
+    ],
+    "formats": [
+      ".pen",
+      ".rp",
+      ".html",
+      ".json"
+    ],
+    "modes": [
+      "cli",
+      "mcp-interactive",
+      "html-only",
+      "axure",
+      "figma"
+    ]
   }
 }

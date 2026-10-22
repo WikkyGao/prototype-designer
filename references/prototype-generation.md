@@ -1,20 +1,48 @@
 # 可交互原型生成 — 参考手册
 
-> 本文档是 pencil-designer SKILL.md 中「步骤 9：可交互原型生成」的详细实现参考。
+> 本文档是 prototype-designer SKILL.md 中「步骤 8：可交互原型生成」的详细实现参考。
 > 主文件只保留触发条件和输出规格，完整实现细节在此。
+> 支持四种页面来源：模式 1 从 `.pen` 读取；模式 2 从 `design-pages.html` 读取（见 [html-only-mode.md](html-only-mode.md)）；模式 3 从 RP/1 源码或 `.rp` 读取（见 [axure-mode.md](../adapters/axure/references/axure-mode.md)）；模式 4 从 Figma 云端文件读取（见 [figma-mcp.md](../adapters/figma/references/figma-mcp.md)）。
 
 ## 一、前置：Context 补录
 
 原型生成前必须确认所有交互型节点已有 context。缺失 context 的节点无法正确实现交互。
 
-### Context 补录流程
+### 模式 1：.pen 来源
 
-1. `batch_get` 读取 .pen 全部节点
+1. `execute` 的 `Get` 读取全部节点
 2. 筛选交互型节点（名含 btn/input/select/switch/filter/row/stat/chart/tab/modal）
 3. 检查 context 是否存在，缺失的按优先级补录：
    - PRD.md 交互需求 > 节点命名推断 > 默认惯例
-4. 用 MCP `batch_design` 工具的 `Update(path, {context: "..."})` 批量写入
-5. `batch_get` 验证写入成功
+4. 用 `Update(id, {context:"..."})` 批量写入
+5. `Get` 验证写入成功
+
+### 模式 2：HTML 来源
+
+1. 解析 `design-pages.html`，遍历所有带 `data-context` 的节点
+2. 校验属性值可被 `JSON.parse`，且包含 `trigger` / `action`
+3. 筛选应有的交互型节点（class 或标签命中 btn/input/select/switch/filter/row/stat/chart/tab/modal）
+4. 缺失 context 的节点按同一优先级补齐，**直接写回 `design-pages.html` 的 `data-context` 属性**
+5. 校验 `navigate.target` 能匹配到某个 `data-page` 或已声明弹窗
+
+> HTML 模式在页面设计阶段就应内联 context，这里只做校验与兜底，不引入 pen 工具。
+
+### 模式 3：Axure 来源
+
+1. 优先解析 `design.rp1.json` 的 `pages[]` 与 `on` / `onClick` / `onLoad` 事件，动作即交互事实来源
+2. 已有 `.rp` 用 `node bin/axure.mjs rp-read <file> --json`，或 MCP `read_interactions({ page })`
+3. RP/1 原生交互不需要补录 context；生成 HTML 原型时把事件与动作转成 `data-context`
+4. 名称以 `btn-` / `input-` / `select-` / `nav-` / `tab-` 开头的节点必须有对应交互，否则在说明面板标注「静态展示」
+5. 跳转目标必须能匹配到 `pages[].name` 或已声明弹窗
+
+### 模式 4：Figma 来源
+
+1. 用 `get_metadata` 读取文件与顶层 frame，确定页面清单；用 `get_design_context` 读取结构与样式（默认 React + Tailwind，仅作参考）
+2. 用 `get_variable_defs` 读取设计令牌；用 `get_libraries` / `search_design_system` 识别已发布组件
+3. Figma 节点没有 pen.dev 的 `context` 字段；交互从 PRD、Figma 原型连线、页面命名与用户补充信息推导
+4. 生成 HTML 时把推导结果写为 `data-context`；无法确认的交互标为「静态展示」并写入 `limitations`
+5. 用 `get_screenshot` 做视觉参考，不把截图通过说成交互验收
+6. 归一化 `pages[]` / `interactions[]` 后交给公共核心生成三栏 HTML；Figma 适配器不拼 HTML 外壳
 
 ### 默认 Context 模板
 
@@ -333,7 +361,7 @@ function autoLoad() {
 
 ## 九、页面数据提取
 
-### 从 batch_get 结果提取
+### 模式 1：从 execute Get 结果提取
 
 ```javascript
 // 页面列表
@@ -346,3 +374,104 @@ for (n of data.nodes) if (n.type === 'frame' && n.name.includes('页')) pages.pu
 // 便签 → 生成说明卡片
 // noteFrame 节点的 name/children 提取标题和内容
 ```
+
+### 模式 2：从 HTML 片段提取
+
+```javascript
+const doc = new DOMParser().parseFromString(pagesHtml, 'text/html');
+
+// 页面列表：data-page 即导航项
+const pages = [...doc.querySelectorAll('section.page[data-page]')].map(el => ({
+  name: el.dataset.page,
+  route: el.dataset.route || '',
+  html: el.outerHTML
+}));
+
+// 交互映射：所有带 data-context 的节点
+const interactions = [...doc.querySelectorAll('[data-context]')].map(el => ({
+  page: el.closest('section.page')?.dataset.page,
+  selector: el.className || el.tagName.toLowerCase(),
+  context: JSON.parse(el.dataset.context)
+}));
+
+// 说明卡片：优先取 data-note 属性，其次取页面内 .note 节点
+const notes = [...doc.querySelectorAll('[data-note], .note')];
+```
+
+### 输出命名
+
+| 模式 | 输出文件 |
+|------|----------|
+| 模式 1（.pen） | `{原文件名}-prototype.html`，与 .pen 同目录 |
+| 模式 2（仅 HTML） | `design-prototype.html`，与 `design-pages.html` 同目录 |
+| 模式 3（Axure） | `design-prototype.html`（可选），与 `.rp` 同目录 |
+| 模式 4（Figma） | `design-prototype.html`（可选） |
+
+四种模式输出的 HTML 都必须是单文件自包含（CSS/JS 全部内联），引用图片时优先内联 data URI。
+
+---
+
+## 十、结构化元数据契约（下游交付）
+
+原型除三栏展示外，必须携带可机器解析的页面/交互元数据，供 prototype-to-frontend 等下游直接消费。**不改变三栏布局、水滴标注与 localStorage 行为，也不需要下游改流程。**
+
+### 10.1 DOM 约定
+
+| 元素 | 必需属性 | 说明 |
+|---|---|---|
+| 预览区页面 | `class="page"` + `data-page` + `data-route` | 页面唯一名与建议路由；同一原型内 `data-page` 唯一 |
+| 左栏导航项 | `data-target="<data-page 值>"` | 点击切换到对应页面 |
+| 交互节点 | `data-context='{...}'` | JSON，含 `trigger`/`action`；模式 1 由节点 `context` 生成 |
+| 标注点 | `data-annotation-id="<id>"` | 与说明卡一一对应 |
+| 说明卡 | `data-annotation-id="<id>"` | 与标注点一一对应 |
+
+```html
+<section class="page" data-page="登录" data-route="/login">...</section>
+<button class="nav-item" data-target="登录">登录</button>
+<button class="btn btn-primary" data-context='{"trigger":"click","action":"submit"}'>登录</button>
+<div class="annotation-wrap" data-annotation-id="a1">...</div>
+<div class="note-card" data-annotation-id="a1">提交后跳转首页</div>
+```
+
+规则：
+
+- `data-page` 使用与 PRD 页面名一致的稳定名称，不做同义多命名
+- `data-route` 必须存在；PRD 未给出时按页面名生成建议路由
+- 三栏外壳（左导航、右说明、拖拽把手）继续保留，但下游解析时应剥离
+
+### 10.2 内嵌清单
+
+在 `</body>` 前写入一份 JSON（不要写注释）：
+
+```html
+<script type="application/json" id="prototype-manifest">
+{
+  "schemaVersion": "1.0",
+  "generator": "prototype-designer",
+  "mode": "html-only",
+  "tokensSource": "UI Design.html",
+  "pages": [
+    { "name": "登录", "route": "/login", "selector": "[data-page=\"登录\"]", "contextCount": 3 }
+  ],
+  "shared": ["nav-sidebar"],
+  "files": { "pages": "design-pages.html", "designSpec": "UI Design.html", "componentLibrary": "component-library.html", "components": "components.json" }
+}
+</script>
+```
+
+- 模式 1：`mode` 为 `"pen"`，`files.design` 指向 `.pen`，`tokensSource` 写 `"design.pen variables"`
+- 模式 3：`mode` 为 `"axure"`，`files.design` 指向 `.rp`，`files.source` 指向 RP/1
+- 模式 4：`mode` 为 `"figma"`，`files.design` 指向 Figma URL，`files.fileKey` 记录 `file_key`
+- `pages[].selector` 必须在最终 HTML 中唯一命中对应页面容器
+- `contextCount` 为该页带 `data-context` 的节点数，供下游核对交互完整性
+- `shared` 为跨页复用组件名（来自 `component-library.html` 或可复用节点）
+- 不生成外部清单文件，原型保持单文件自包含
+
+### 10.3 下游读取顺序
+
+1. `#prototype-manifest` → 页面清单、路由、交互数、文件索引
+2. `section.page[data-page]` → 页面 DOM 与结构
+3. `[data-context]` → 交互规格
+4. 剥离三栏外壳，只取预览区内容
+
+按此顺序解析即可完成原型转前端所需的页面/结构/交互提取，无需依赖三栏视觉特征。

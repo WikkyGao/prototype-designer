@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0",
+  "id": "figma",
+  "name": "Figma",
+  "version": "0.1.0",
+  "status": "ready",
+  "migrationState": "extracted",
+  "nativeFormat": "Figma cloud file",
+  "htmlPolicy": "optional",
+  "requires": [
+    "figma-mcp",
+    "figma-use",
+    "figma-full-or-dev-seat-for-write"
+  ],
+  "preflight": null,
+  "capabilities": {
+    "create": true,
+    "read": true,
+    "edit": true,
+    "verify": true
+  },
+  "acceptance": [
+    "structural",
+    "native-open",
+    "preview"
+  ],
+  "entry": "SKILL.md"
+}

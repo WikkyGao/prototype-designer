@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1.0",
+  "updated": "2026-10-22",
+  "adapters": [
+    {
+      "id": "pen",
+      "path": "adapters/pen",
+      "entry": "SKILL.md"
+    },
+    {
+      "id": "axure",
+      "path": "adapters/axure",
+      "entry": "SKILL.md"
+    },
+    {
+      "id": "figma",
+      "path": "adapters/figma",
+      "entry": "SKILL.md"
+    },
+    {
+      "id": "opendesign",
+      "path": "adapters/opendesign",
+      "entry": "SKILL.md"
+    }
+  ]
+}

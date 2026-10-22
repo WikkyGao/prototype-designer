@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "1.0",
+  "id": "axure",
+  "name": "Axure",
+  "version": "0.1.0",
+  "status": "ready",
+  "migrationState": "extracted",
+  "nativeFormat": ".rp",
+  "htmlPolicy": "optional",
+  "requires": [
+    "zee-rp",
+    "python>=3.10",
+    "axure"
+  ],
+  "preflight": "scripts/axure-preflight.mjs",
+  "capabilities": {
+    "create": true,
+    "read": true,
+    "edit": true,
+    "verify": true
+  },
+  "acceptance": [
+    "structural",
+    "native-open",
+    "preview",
+    "gui-roundtrip"
+  ],
+  "entry": "SKILL.md"
+}

@@ -2,16 +2,66 @@
   {
     "id": 1,
     "prompt": "帮我创建一个登录页面，包含邮箱输入、密码输入和登录按钮",
-    "expected": "使用 CLI Agent 模式创建 .pen 文件，完成环境校验→PRD检查→设计→保存的完整流程"
+    "expected": "完成前置检查（PRD → 标准控件库 → 设计规范）→ 询问产出形态（原生 + HTML / 仅 HTML）→ 若原生再询问 Pen / Axure / Figma（OpenDesign planned，禁用）→ 环境校验 → 设计 → 保存的完整流程"
   },
   {
     "id": 2,
     "prompt": "我想设计一个数据分析仪表板，包含统计卡片和图表",
-    "expected": "先尝试 CLI，如不满足则降级到 MCP Interactive 模式，使用组件复用和分批设计"
+    "expected": "完成前置检查（PRD → 标准控件库 → 设计规范）并确认产出形式，再先尝试 CLI，如不满足则降级到 MCP Interactive 模式，使用组件复用和分批设计"
   },
   {
     "id": 3,
     "prompt": "把 login.pen 生成可交互的 HTML 原型",
-    "expected": "读取 .pen 结构→解析 context 交互描述→生成单文件 HTML→实现交互映射"
+    "expected": "确认已有 .pen 原型来源，读取 .pen 结构 → 解析 context 交互描述 → 生成单文件 HTML → 实现交互映射"
+  },
+  {
+    "id": 4,
+    "prompt": "用 Axure 设计一个订单管理原型，要能在 Axure 里继续编辑",
+    "expected": "完成 PRD/控件库/设计规范前置检查 → 选择模式 3 → 校验 ZEE_RP_HOME/Python/空白模板 → 编写 RP/1 源码 → check → generate 出 .rp → rp-read 确认结构三零 → 如实说明 Axure 预览待验收"
+  },
+  {
+    "id": 5,
+    "prompt": "把现有工程里的“提交”按钮改名为“保存订单”，并加一个点击提示",
+    "expected": "先 rp-read/read_interactions 定位 → 用 name-widget 或 MCP rename_widget 改名 → 用 add_interaction/edit_text 修改 → 输出到新文件 → verify/rp-read 复核，绝不覆盖原工程"
+  },
+  {
+    "id": 6,
+    "prompt": "我这台 Mac 同时装了 Axure 9 和 11，帮我把这个 Axure 原型在 11 里验证一下",
+    "expected": "先确认目标版本与产物版本（RP/1 产物是 RP9）→ 复制为 *-rp11-verify.rp → 明确告知用户将接管 GUI（打开哪个副本、会执行哪些点击/保存/关闭动作）并取得确认 → 用 Axure 11 打开副本并确认升级 → Publish → Preview 点击关键交互 → 记录 preview 证据 → 不覆盖交付文件 → 清理临时文件"
+  },
+  {
+    "id": 7,
+    "prompt": "我这台机器没装 pen CLI，先帮我把登录页做成可交互 HTML",
+    "expected": "说明 Pen 环境不可用 → 询问是否改为仅 HTML → 用户确认后走模式 2 → 保留 PRD/控件库/设计规范/组件库流程，不得静默切换"
+  },
+  {
+    "id": 8,
+    "prompt": "把 design.pen 的主色改成绿色，别覆盖原文件",
+    "expected": "通过 MCP 读取 .pen → 结构校验与截图验收分开 → 输出新 .pen 文件 → 不覆盖原文件 → 返回文件路径与验收证据"
+  },
+  {
+    "id": 9,
+    "prompt": "用 OpenDesign 帮我生成一个登录页原型。",
+    "expected": "说明 OpenDesign 为 planned，不进入可用工具；返回 blocked 并提供仅 HTML 或停止，不编造 CLI/API、不伪造原生文件、不静默改用 Pen/Axure/Figma"
+  },
+  {
+    "id": 10,
+    "prompt": "需求分析传过来 output=native、adapter 为空，直接开始设计吧。",
+    "expected": "不假定工具；先询问 Pen / Axure / Figma（OpenDesign 当前禁用），选择后校验对应环境并执行；DesignRequest.adapter 由本 Skill 填入"
+  },
+  {
+    "id": 11,
+    "prompt": "用 Figma 帮我设计一个登录页面，我的 Figma 是 Full 席位。",
+    "expected": "完成 PRD/控件库/设计规范前置检查 → 选择模式 4 → whoami() 确认 Full 席位 → 从 URL 解析或确认 file_key → 首次写入前提示 beta 可能计费 → 加载 figma-use → create_new_file/use_figma → get_screenshot 验收 → 返回 Figma URL；不伪造本地 .fig"
+  },
+  {
+    "id": 12,
+    "prompt": "我的 Figma 是 View 席位，帮我把这个页面的按钮改成绿色。",
+    "expected": "whoami() 判定只读 → 自动只读降级，只执行 get_design_context/get_metadata/get_screenshot → 明确说明无法写入并给出升级席位或仅 HTML 的选项 → 不调用 use_figma，不声称已修改"
+  },
+  {
+    "id": 13,
+    "prompt": "读取这个 Figma 文件，生成一版可交互 HTML 原型。",
+    "expected": "确认 file_key → get_metadata 取页面清单 → get_design_context 取结构 → get_variable_defs 取令牌 → 从 PRD/原型连线推导交互并写 data-context → 生成单文件 HTML；Figma 节点不回写 context，截图不当作交互验收"
   }
 ]

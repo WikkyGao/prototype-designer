@@ -1,8 +1,12 @@
 # pen.dev MCP 工具完全参考
 
-> 对应 Pen.app 1.2.5+ MCP server。MCP 工具已从 9 个重构为 **4 个**：
-> `execute` / `get_app_state` / `get_guidelines` / `browser`。
-> 旧的 `batch_design`、`batch_get`、`get_editor_state`、`get_screenshot`、`export_nodes`、`get_variables`、`set_variables`、`snapshot_layout` 全部移除。
+> 本文只描述 pen.dev 的 MCP。模式 3（Axure）使用 zee-rp 的 MCP（`axure_open` / `locate` / `edit_text` / `axure_save` 等），见 [axure-mode.md](../../axure/references/axure-mode.md)。
+>
+> 对应 pen.dev CLI **0.3.12** / Pen.app 1.2.5+ MCP server。MCP 工具共 **5 个**：
+> `execute` / `get_app_state` / `get_style` / `read_skill` / `browser`。
+>
+> 0.3.12 变更：`get_guidelines` 已移除（改用 `get_style` + `read_skill`）；`get_app_state` 改为无参数；`execute` 新增 `description`；`browser` 新增 `cdp` / `nodeId` / `method` / `params`。
+> 更早移除的 `batch_design`、`batch_get`、`get_editor_state`、`get_screenshot`、`export_nodes`、`get_variables`、`set_variables`、`snapshot_layout` 同样不可用。
 >
 > 启动参数（桌面端）：`mcp-server --app desktop --agent claudeCodeCLI`。
 > 桌面连接需 **Pen.app 正在运行**，否则返回空。
@@ -13,29 +17,27 @@
 
 | 工具 | 用途 | 必填参数 |
 |---|---|---|
-| `get_app_state` | 当前 app/画布/浏览器状态 + schema + 设计指南 | `include_schema`、`include_canvas_design`、`include_scripts_and_shaders`（三者必填） |
-| `execute` | 执行 JS snippet 增删查改节点、变量、截图、导出 | `filePath`；`input`（首次）或 `editId`+`edits`（修补） |
-| `get_guidelines` | 加载设计指南（guide）与视觉风格（style） | 无；`category`/`name`/`params` 按需 |
-| `browser` | 真实网页 → 可编辑画布图层 / 截图 / 取 DOM | `filePath`、`action` |
+| `get_app_state` | 当前 app/画布/浏览器状态、用户选择 | 无 |
+| `execute` | 执行 JS snippet 增删查改节点、变量、截图、导出 | `filePath`；`input`（首次）或 `editId`+`edits`（修补）；建议传 `description` |
+| `get_style` | 加载视觉风格原型（字体/配色/图像），仅参考值 | 无；`name`、`params` 按需 |
+| `read_skill` | 读取官方 SKILL.md、schema、execute API 与指南 | 无；`path` 按需 |
+| `browser` | 真实网页 → 可编辑画布图层 / 截图 / 取 DOM / CDP 操作 | `action`；`cdp` 时另需 `method`、`params` |
 
-> ⚠ `execute` 的官方说明写在 `get_app_state` 的返回里。也可在 CLI headless 下用 `read_skill({ path: "execute.md" })` 拉取（见 [execute-api.md](execute-api.md)）。
+> ⚠ `execute` 的官方说明用 `read_skill({ path: "execute.md" })` 获取（见 [execute-api.md](execute-api.md)）。
 
 ---
 
 ## 二、get_app_state
 
-获取任务所需的当前状态。**只请求你确定需要的部分**，避免拉满上下文。
+获取当前文档状态、用户选择与画布基础信息。
 
 ```json
-{
-  "include_schema": true,                       // .pen 文件 schema
-  "include_canvas_design": true,                // 画布编辑器通用操作说明
-  "include_scripts_and_shaders": false          // 仅当要用脚本/着色器时置 true
-}
+{}
 ```
 
-> ⚠ 三者都是**必填**布尔。为空或 false 过多会返回空内容。
-> 桌面端且 Pen.app 未启动 → 返回空，需先启动应用或改用 `pen interactive` headless。
+- **无参数**（0.3.12 起不再接受 `include_schema` / `include_canvas_design` / `include_scripts_and_shaders`）
+- 需要 `.pen` schema 或 execute 文档时改用 `read_skill`
+- 桌面端且 Pen.app 未启动 → 返回空，需先启动应用或改用 `pen interactive` headless
 
 ---
 
@@ -46,15 +48,19 @@
 ```json
 {
   "filePath": "design.pen",                     // 目标 .pen 文件路径（必填）
+  "description": "Add pricing section with 3 tiers",
   "input": "<JS snippet>"                       // 首次执行的代码（与 edits 互斥）
 }
 ```
+
+`description` 要求：3-8 个词的命令式短语，首字母大写、不加句号，会作为用户可见的操作标签。
 
 失败时修补（**绝不重发整个 snippet**）：
 
 ```json
 {
   "filePath": "design.pen",
+  "description": "Fix header alignment",
   "editId": "<失败信息中的 id>",
   "edits": [
     { "find": "原 snippet 精确文本", "replace": "替换文本" },
@@ -72,34 +78,52 @@
 
 ---
 
-## 四、get_guidelines
+## 四、get_style
 
-加载任务相关的设计指南与视觉风格。风格（style）**只提供参考值，不写入变量**。
+加载视觉风格原型。风格（style）**只提供参考值，不写入变量**。
 
 ```json
-// 1) 列出全部可用 guide / style
+// 1) 列出全部可用 style
 { }
 
-// 2) 加载指定指南（或先拿所需 params）
-{ "category": "guide", "name": "landing-page" }
+// 2) 加载指定风格，或先拿所需 params
+{ "name": "minimal" }
 
-// 3) 带参数加载指南 / 风格
-{ "category": "style", "name": "minimal", "params": { "accent": "#A3B59A" } }
+// 3) 带参数加载风格
+{ "name": "minimal", "params": { "accent": "#A3B59A" } }
 ```
 
 | 字段 | 说明 |
 |---|---|
-| `category` | `"guide"`（任务型指令）/ `"style"`（字体/配色/图像风格原型） |
-| `name` | 来自清单的名称 |
+| `name` | 来自清单的风格名称 |
 | `params` | 第 2 步返回的必填键值对 |
 
-> 不要一次请求互不兼容的多份指南，按当前任务只取需要的。
+> 需要任务型设计指南时用 `read_skill`，不要一次加载互不兼容的多份风格。
 
 ---
 
-## 五、browser
+## 五、read_skill
 
-与 app 内置浏览器里的**真实网页**交互：打开 URL、把页面（或某元素）复现为可编辑画布图层、截图、或把 DOM/截图拉回对话。
+读取 pen.dev 官方设计技能与文档。
+
+```json
+// 返回官方 SKILL.md
+{ }
+
+// 读取指定文档
+{ "path": "pen-schema.md" }
+{ "path": "execute.md" }
+{ "path": "guide/web-app.md" }
+```
+
+- 首次进入 `.pen` 任务时读取 `pen-schema.md` 与 `execute.md`
+- 指南路径见官方 SKILL.md 的引用列表
+
+---
+
+## 六、browser
+
+与 app 内置浏览器里的**真实网页**交互：打开 URL、把页面（或某元素）复现为可编辑画布图层、截图、取 DOM，或直接发送 CDP 命令。
 
 ```json
 // 打开页面（其他 action 的前置条件）
@@ -116,6 +140,12 @@
 
 // 截图落到画布（作为图片节点）
 { "filePath": "design.pen", "action": "screenshot-to-canvas", "target": "full-page" }
+
+// CDP：读页面标题
+{ "filePath": "design.pen", "action": "cdp", "method": "Runtime.evaluate", "params": { "expression": "document.title", "returnByValue": true } }
+
+// CDP：点击页面坐标
+{ "filePath": "design.pen", "action": "cdp", "method": "Input.dispatchMouseEvent", "params": { "type": "mousePressed", "x": 100, "y": 200, "button": "left", "clickCount": 1 } }
 ```
 
 ### action 枚举
@@ -127,6 +157,7 @@
 | `screenshot-to-canvas` | 把目标截图作为图片放到画布 |
 | `return-element` | 返回目标元素的 DOM + 计算样式文本 |
 | `return-screenshot` | 返回目标截图图片（给你看） |
+| `cdp` | 发送一条 Chrome DevTools Protocol 命令（`method` + `params`） |
 
 ### target 枚举
 
@@ -136,9 +167,17 @@
 | `selection` | 用户在浏览器里用元素选择器挑中的（没有则报错） |
 | `query` | 由 `querySelector` 解析出的元素 |
 
+### CDP 限制（0.3.12）
+
+- 仅开放 `DOM` / `Input` / `Page` / `Runtime` / `Emulation` / `CSS` / `Accessibility` 域
+- 不要发送 `Escape`：编辑器会拦截并取消选中
+- 引发导航的命令（含点击链接）会在加载完成后返回
+- 执行后用 `return-screenshot` 或 `return-element` 校验结果
+
 ### 使用要点
 
 - **先 `load-page`** 再调用其他 action；页面未加载会失败
+- `nodeId` 可驱动文档中的 browser 节点；省略则驱动侧边栏自带页面
 - localhost 开发服务器通常热更新：页面已加载时跳过 `load-page` 直接 `return-screenshot`
 - 优先 `target: "query"` / `"selection"`，避免 `full-page` 撑爆上下文
 - `return-element` 对 `body`/`html` 或宽泛选择器要谨慎——整页 DOM 可能极大；改用具体 section 或 `return-screenshot`
@@ -150,3 +189,4 @@
 1. 复现 hero：`load-page`(url) → `import-to-canvas`(target:query, querySelector:".hero")
 2. 忠实还原组件：`return-element`(.pricing-card) 读 DOM/样式 → `return-screenshot`(.pricing-card) 对比自己的渲染
 3. 闭环本地生成的页面：`load-page`(localhost) → `return-screenshot`(full-page)
+4. 操作页面菜单：`DOM.querySelector` + `DOM.getBoxModel` 定位 → `Input.dispatchMouseEvent` 点击中心 → `return-screenshot` 校验
