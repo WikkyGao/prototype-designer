@@ -42,7 +42,7 @@
 3. Figma 节点没有 pen.dev 的 `context` 字段；交互从 PRD、Figma 原型连线、页面命名与用户补充信息推导
 4. 生成 HTML 时把推导结果写为 `data-context`；无法确认的交互标为「静态展示」并写入 `limitations`
 5. 用 `get_screenshot` 做视觉参考，不把截图通过说成交互验收
-6. 归一化 `pages[]` / `interactions[]` 后交给公共核心生成三栏 HTML；Figma 适配器不拼 HTML 外壳
+6. 归一化 `pages[]` / `interactions[]` 后交给公共核心按 `prototypeStyle` 生成评审 HTML；Figma 适配器不拼 HTML 外壳
 
 ### 默认 Context 模板
 
@@ -59,7 +59,9 @@
 
 ## 二、HTML 布局规范
 
-### 固定三栏布局
+评审外壳由 `prototypeStyle` 决定，页面内容与数据契约不随样式变化。
+
+### `project`：固定三栏
 
 ```
 ┌──────────────┬────────────────────────┬──────────────┐
@@ -73,7 +75,39 @@
 
 CSS 变量驱动宽度：`--left-width: 180px; --info-width: 280px`
 
+### `editorial-ink`：顶部页面切换 + 居中舞台
+
+```
+┌ PROTOTYPE  [01 登录] [02 注册] [03 工作台]   [主题] [看全部备注] ┐
+│ [全部备注展开区：按页面列出，当前页高亮]                         │
+├──────────────────────────────────────────────────────────────────┤
+│                   居中舞台 max-width:1120                         │
+│   ┌────────────────────────┬────────────────────────┐            │
+│   │ 左侧品牌叙述            │ 右侧表单 / 内容         │            │
+│   └────────────────────────┴────────────────────────┘            │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+- `.proto` 吸顶，页面按钮 `.pnav button[data-target]`，主题与备注按钮在右
+- `.wrap` 居中，最大宽度 `1120px`
+- 页面区 `section.page[data-page][data-route]`，同一时间只显示一个
+- 「看全部备注」默认收起；展开后列出所有页面说明，当前页对应项高亮
+- 登录 / 注册 / 引导 / 设置页用 `.authpage` 双栏；数据页用 `.top` + `.statbar` + `.data-table`
+- 具体结构、切换与备注脚本见 [prototype-styles.md](prototype-styles.md) §4.3
+
+### 视觉样式层
+
+1. 读取项目根 `.prototype-designer.json` 的 `prototypeStyle`
+2. `project` → 沿用 `UI Design.html` 的令牌与三栏外壳，不设置 `data-style`
+3. `editorial-ink` → 在 `<html>` 设置 `data-style="editorial-ink" data-theme="dark"`，使用顶部导航外壳，并把 `assets/prototypes/styles/editorial-ink.css` 完整内联到最终文件
+4. 样式 CSS 放在页面与组件 CSS 之后，确保外壳与页面令牌一致
+5. `editorial-ink` 的 `.psp` 放 `theme-toggle` 与 `看全部备注`，用 `localStorage['prototype-designer-theme']` 记忆明暗主题
+6. 页面切换不刷新；切换后更新 `.on` / `aria-current`，并回到页面顶部
+7. 首次选择、配置结构、冲突处理与完整令牌见 [prototype-styles.md](prototype-styles.md)
+
 ## 三、水滴标注系统
+
+> `project` 默认使用水滴标注。`editorial-ink` 默认使用页面级备注；需要节点标注时保留水滴，并把标注文本并入「看全部备注」的「本页标注」分组。
 
 ### 水滴形状
 
@@ -394,7 +428,13 @@ const interactions = [...doc.querySelectorAll('[data-context]')].map(el => ({
   context: JSON.parse(el.dataset.context)
 }));
 
-// 说明卡片：优先取 data-note 属性，其次取页面内 .note 节点
+// 页面级备注：editorial-ink 的「看全部备注」数据源
+const pageNotes = [...doc.querySelectorAll('section.page[data-page]')].map(el => ({
+  page: el.dataset.page,
+  html: el.querySelector('template[data-page-note]')?.innerHTML || el.dataset.note || ''
+}));
+
+// 节点说明卡片：优先取 data-note 属性，其次取页面内 .note 节点
 const notes = [...doc.querySelectorAll('[data-note], .note')];
 ```
 
@@ -413,17 +453,18 @@ const notes = [...doc.querySelectorAll('[data-note], .note')];
 
 ## 十、结构化元数据契约（下游交付）
 
-原型除三栏展示外，必须携带可机器解析的页面/交互元数据，供 prototype-to-frontend 等下游直接消费。**不改变三栏布局、水滴标注与 localStorage 行为，也不需要下游改流程。**
+原型除评审外壳外，必须携带可机器解析的页面/交互元数据，供 prototype-to-frontend 等下游直接消费。**不改变所选外壳布局、页面切换、备注或水滴行为，也不需要下游改流程。**
 
 ### 10.1 DOM 约定
 
 | 元素 | 必需属性 | 说明 |
 |---|---|---|
 | 预览区页面 | `class="page"` + `data-page` + `data-route` | 页面唯一名与建议路由；同一原型内 `data-page` 唯一 |
-| 左栏导航项 | `data-target="<data-page 值>"` | 点击切换到对应页面 |
+| 页面导航项 | `data-target="<data-page 值>"` | 点击切换到对应页面；三栏时在左栏，editorial-ink 时在顶部 `.pnav` |
 | 交互节点 | `data-context='{...}'` | JSON，含 `trigger`/`action`；模式 1 由节点 `context` 生成 |
 | 标注点 | `data-annotation-id="<id>"` | 与说明卡一一对应 |
 | 说明卡 | `data-annotation-id="<id>"` | 与标注点一一对应 |
+| 页面备注 | `template[data-page-note]` | `editorial-ink` 的「看全部备注」数据源；每个页面最多一个 |
 
 ```html
 <section class="page" data-page="登录" data-route="/login">...</section>
@@ -437,7 +478,7 @@ const notes = [...doc.querySelectorAll('[data-note], .note')];
 
 - `data-page` 使用与 PRD 页面名一致的稳定名称，不做同义多命名
 - `data-route` 必须存在；PRD 未给出时按页面名生成建议路由
-- 三栏外壳（左导航、右说明、拖拽把手）继续保留，但下游解析时应剥离
+- `project` 保留三栏外壳；`editorial-ink` 使用顶部导航 + 备注条；两者都保留 `data-page` / `data-target` / `data-context`，下游解析时应剥离评审外壳
 
 ### 10.2 内嵌清单
 
@@ -449,6 +490,7 @@ const notes = [...doc.querySelectorAll('[data-note], .note')];
   "schemaVersion": "1.0",
   "generator": "prototype-designer",
   "mode": "html-only",
+  "style": "project",
   "tokensSource": "UI Design.html",
   "pages": [
     { "name": "登录", "route": "/login", "selector": "[data-page=\"登录\"]", "contextCount": 3 }
@@ -462,6 +504,7 @@ const notes = [...doc.querySelectorAll('[data-note], .note')];
 - 模式 1：`mode` 为 `"pen"`，`files.design` 指向 `.pen`，`tokensSource` 写 `"design.pen variables"`
 - 模式 3：`mode` 为 `"axure"`，`files.design` 指向 `.rp`，`files.source` 指向 RP/1
 - 模式 4：`mode` 为 `"figma"`，`files.design` 指向 Figma URL，`files.fileKey` 记录 `file_key`
+- 所有模式：`style` 为 `project` 或 `editorial-ink`；`editorial-ink` 时 `tokensSource` 写 `"editorial-ink preset"`
 - `pages[].selector` 必须在最终 HTML 中唯一命中对应页面容器
 - `contextCount` 为该页带 `data-context` 的节点数，供下游核对交互完整性
 - `shared` 为跨页复用组件名（来自 `component-library.html` 或可复用节点）
@@ -472,6 +515,6 @@ const notes = [...doc.querySelectorAll('[data-note], .note')];
 1. `#prototype-manifest` → 页面清单、路由、交互数、文件索引
 2. `section.page[data-page]` → 页面 DOM 与结构
 3. `[data-context]` → 交互规格
-4. 剥离三栏外壳，只取预览区内容
+4. 剥离评审外壳（三栏或顶部导航 + 备注条），只取预览区内容
 
-按此顺序解析即可完成原型转前端所需的页面/结构/交互提取，无需依赖三栏视觉特征。
+按此顺序解析即可完成原型转前端所需的页面/结构/交互提取，无需依赖评审外壳视觉特征。

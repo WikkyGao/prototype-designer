@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-style="editorial-ink" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微光清单 · 纸墨编辑风原型</title>
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem("prototype-designer-theme");
+      if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+    } catch (error) {}
+  })();
+</script>
+<style>/*INJECT_PAGE_CSS*/</style>
+<style>/*INJECT_STYLE_CSS*/</style>
+<style>
+  html[data-style="editorial-ink"] .proto .note-list { display: grid; gap: 2px; max-height: 34vh; overflow: auto; padding-right: 4px; }
+  html[data-style="editorial-ink"] .proto .note-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; color: var(--text-faint); font: 9px/1.5 var(--font-mono); letter-spacing: .14em; }
+  html[data-style="editorial-ink"] .proto .note-item b { font-family: var(--font-serif); font-size: 13px; font-weight: 600; }
+  html[data-style="editorial-ink"] .proto .note-item .note-body { color: var(--text-muted); }
+  html[data-style="editorial-ink"] .proto .note-item .note-body b { color: var(--text); }
+  html[data-style="editorial-ink"] .proto-footer { max-width: 1120px; margin: 0 auto; padding: 0 20px 40px; color: var(--text-faint); font: 9.5px/1.6 var(--font-mono); letter-spacing: .12em; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  html[data-style="editorial-ink"] .page[hidden] { display: none !important; }
+  html[data-style="editorial-ink"] .modal-backdrop[hidden],
+  html[data-style="editorial-ink"] .drawer[hidden],
+  html[data-style="editorial-ink"] .drawer-backdrop[hidden],
+  html[data-style="editorial-ink"] .toast[hidden] { display: none !important; }
+  @media (max-width: 860px) {
+    html[data-style="editorial-ink"] .proto .note-list { max-height: 42vh; }
+    html[data-style="editorial-ink"] .proto-footer { padding-bottom: 28px; }
+  }
+</style>
+</head>
+<body data-initial-page="登录">
+<div class="proto">
+  <span class="pl">PROTOTYPE</span>
+  <nav class="pnav" id="pnav" aria-label="原型页面">
+    <button type="button" data-target="登录" class="on" aria-current="page">01 登录</button>
+    <button type="button" data-target="今日清单">02 今日清单</button>
+    <button type="button" data-target="归档">03 归档</button>
+  </nav>
+  <div class="psp">
+    <button class="theme-toggle" type="button" id="themeToggle" aria-label="切换明暗主题" aria-pressed="true">
+      <span class="theme-icon" id="themeIcon">◐</span>
+      <span id="themeLabel">DARK</span>
+    </button>
+    <button class="btn" type="button" id="allBtn" aria-expanded="false" title="展开或收起所有页面说明">看全部备注</button>
+  </div>
+  <div class="note" id="protoNote" hidden></div>
+</div>
+
+<main class="wrap stage" id="stage">
+<!--INJECT_PAGES-->
+</main>
+
+<div class="proto-footer">
+  <span>GLOW LIST · PROTOTYPE 01</span>
+  <span>EDITORIAL INK · TOP NAV + PAGE NOTES</span>
+</div>
+
+<!--INJECT_OVERLAYS-->
+
+<script>
+  (function () {
+    "use strict";
+    var root = document.documentElement;
+    var toggle = document.getElementById("themeToggle");
+    var icon = document.getElementById("themeIcon");
+    var label = document.getElementById("themeLabel");
+
+    function syncTheme() {
+      var dark = root.dataset.theme !== "light";
+      if (icon) icon.textContent = dark ? "◐" : "◑";
+      if (label) label.textContent = dark ? "DARK" : "LIGHT";
+      if (toggle) {
+        toggle.setAttribute("aria-pressed", dark ? "true" : "false");
+        toggle.setAttribute("aria-label", dark ? "切换到亮色主题" : "切换到暗色主题");
+      }
+    }
+
+    if (toggle) {
+      toggle.addEventListener("click", function () {
+        root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
+        try { localStorage.setItem("prototype-designer-theme", root.dataset.theme); } catch (error) {}
+        syncTheme();
+      });
+    }
+    syncTheme();
+
+    var pages = Array.prototype.slice.call(document.querySelectorAll("#stage .page[data-page]"));
+    var noteItems = pages.map(function (page) {
+      var template = page.querySelector("template[data-page-note]");
+      return { name: page.dataset.page, html: template ? template.innerHTML : "" };
+    });
+    var notePanel = document.getElementById("protoNote");
+    var allBtn = document.getElementById("allBtn");
+    var pnav = document.getElementById("pnav");
+    var current = pages.length ? pages[0].dataset.page : "";
+
+    function buildNotes() {
+      if (!notePanel) return;
+      notePanel.innerHTML = '<div class="note-head"><span>页面备注 · ' + noteItems.length + ' 页</span><span>点击页面名切片查看</span></div><div class="note-list">' +
+        noteItems.map(function (note) {
+          return '<div class="note-item" data-note-page="' + note.name + '"><b>' + note.name + '</b><span class="note-body"> · ' + note.html + '</span></div>';
+        }).join("") + '</div>';
+    }
+
+    function syncNotes() {
+      if (!notePanel) return;
+      Array.prototype.forEach.call(notePanel.querySelectorAll(".note-item"), function (item) {
+        item.classList.toggle("is-current", item.dataset.notePage === current);
+      });
+    }
+
+    function showPage(name) {
+      var target = pages.filter(function (page) { return page.dataset.page === name; })[0];
+      if (!target) target = pages[0];
+      if (!target) return;
+      pages.forEach(function (page) {
+        var active = page === target;
+        page.hidden = !active;
+        page.classList.toggle("is-active", active);
+      });
+      current = target.dataset.page;
+      if (pnav) {
+        Array.prototype.forEach.call(pnav.querySelectorAll("button[data-target]"), function (button) {
+          var on = button.dataset.target === current;
+          button.classList.toggle("on", on);
+          if (on) button.setAttribute("aria-current", "page");
+          else button.removeAttribute("aria-current");
+        });
+      }
+      syncNotes();
+      document.dispatchEvent(new CustomEvent("pd:page", { detail: { page: current, route: target.dataset.route || "" } }));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    if (pnav) {
+      pnav.addEventListener("click", function (event) {
+        var button = event.target.closest("button[data-target]");
+        if (button) showPage(button.dataset.target);
+      });
+    }
+
+    if (allBtn && notePanel) {
+      allBtn.addEventListener("click", function () {
+        var open = notePanel.hidden;
+        notePanel.hidden = !open;
+        allBtn.setAttribute("aria-expanded", open ? "true" : "false");
+        allBtn.textContent = open ? "收起备注" : "看全部备注";
+        if (open) syncNotes();
+      });
+    }
+
+    buildNotes();
+    window.PD = {
+      showPage: showPage,
+      current: function () { return current; }
+    };
+    showPage(document.body.getAttribute("data-initial-page") || current);
+  })();
+</script>
+<script type="application/json" id="prototype-manifest"><!--INJECT_MANIFEST--></script>
+<script>/*INJECT_PAGE_JS*/</script>
+</body>
+</html>

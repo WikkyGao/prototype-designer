@@ -1,0 +1,54 @@
+{
+  "version": "1.0.0",
+  "libraryFile": null,
+  "htmlLibraryFile": "component-library.html",
+  "lastUpdated": "2026-10-22T21:20:00+08:00",
+  "categories": [
+    { "id": "task", "name": "任务", "prefix": "task-", "description": "任务列表与状态" },
+    { "id": "data-display", "name": "数据展示", "prefix": "stat-", "description": "统计与进度" },
+    { "id": "feedback", "name": "反馈", "prefix": "toast-", "description": "Toast 与提示" },
+    { "id": "annotation", "name": "标注", "prefix": "note-", "description": "说明卡与标注" }
+  ],
+  "components": [
+    {
+      "id": "task-row-20261022",
+      "name": "task-row",
+      "category": "task",
+      "snippetId": "task-row",
+      "description": "任务行，含完成复选框、标题、标签、优先级、删除",
+      "createdAt": "2026-10-22T21:20:00+08:00",
+      "usageCount": 1,
+      "tags": ["task", "list", "checkbox"]
+    },
+    {
+      "id": "stat-20261022",
+      "name": "stat",
+      "category": "data-display",
+      "snippetId": "stat",
+      "description": "统计指标，含标签、主数值、单位与注释",
+      "createdAt": "2026-10-22T21:20:00+08:00",
+      "usageCount": 1,
+      "tags": ["stat", "progress"]
+    },
+    {
+      "id": "toast-20261022",
+      "name": "toast",
+      "category": "feedback",
+      "snippetId": "toast",
+      "description": "状态反馈 Toast",
+      "createdAt": "2026-10-22T21:20:00+08:00",
+      "usageCount": 1,
+      "tags": ["toast", "feedback"]
+    },
+    {
+      "id": "note-card-20261022",
+      "name": "note-card",
+      "category": "annotation",
+      "snippetId": "note-card",
+      "description": "三栏评审右栏说明卡，含编号、类型、页面、标题、正文",
+      "createdAt": "2026-10-22T21:20:00+08:00",
+      "usageCount": 1,
+      "tags": ["annotation", "review"]
+    }
+  ]
+}

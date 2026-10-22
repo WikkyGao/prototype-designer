@@ -1,9 +1,9 @@
 {
   "name": "prototype-designer",
   "display_name": "页面设计技能（pen.dev / Axure / Figma；OpenDesign planned）",
-  "version": "5.1.0",
-  "description": "页面设计编排 Skill，采用编排层 + 适配器架构。支持 pen.dev、Axure 与 Figma：进入设计前检查 PRD、标准控件库与设计规范，再确认产出形态「原生设计文件 + HTML」或「仅 HTML」；原生工具由本 Skill 询问 Pen / Axure / Figma（OpenDesign 为 planned 占位，当前禁用）。Pen/Axure/Figma 的完整细节分别位于 adapters/pen、adapters/axure 与 adapters/figma。原型输出携带 #prototype-manifest + data-page/data-route/data-context，便于原型转前端解析。",
-  "description_en": "Page design orchestration skill with an orchestrator + adapter architecture. Supports pen.dev, Axure and Figma: checks PRD, component library and design spec, then confirms native + HTML or HTML-only; the native tool is chosen here (Pen / Axure / Figma, with OpenDesign planned and disabled). Adapter details live in adapters/pen, adapters/axure and adapters/figma.",
+  "version": "5.4.0",
+  "description": "页面设计编排 Skill，采用编排层 + 适配器架构。支持 pen.dev、Axure、Figma 与墨刀（Modao）：进入设计前检查 PRD、标准控件库与设计规范，再确认产出形态「原生设计文件 + HTML」或「仅 HTML」；原生工具由本 Skill 询问 Pen / Axure / Figma（OpenDesign 为 planned 占位，当前禁用）。Pen/Axure/Figma 的完整细节分别位于 adapters/pen、adapters/axure 与 adapters/figma；Axure 子技能进入前先告知 zee-rp 第三方工具风险，接管 GUI 前通知用户。生成 HTML 原型时首次询问外壳变体（A 顶部导航 / B 三栏标注评审 / C 直出）并写入项目级配置，后续默认沿用直到用户明确更换；配色与字体由项目令牌区按项目前端/UI 规范注入，不绑定视觉预设。原型输出携带 #prototype-manifest + data-page/data-route/data-context，便于原型转前端解析。",
+  "description_en": "Page design orchestration skill with an orchestrator + adapter architecture. Supports pen.dev, Axure, Figma and Modao (MockingBot): checks PRD, component library and design spec, then confirms native + HTML or HTML-only; the native tool is chosen here (Pen / Axure / Figma, with OpenDesign planned and disabled). Adapter details live in adapters/pen, adapters/axure and adapters/figma; the Axure adapter discloses third-party zee-rp tool risk before any work and notifies the user before taking over the GUI. HTML prototypes ask for a shell variant once (A top-nav / B three-column annotate / C direct), remember it in project config, and apply it until explicitly changed; all visuals are driven by project tokens instead of bundled presets.",
   "author": {
     "name": "WikkyGao",
     "email": "",
@@ -44,7 +44,10 @@
     "pen文件",
     "组件库",
     "UI设计",
-    "网页转设计"
+    "网页转设计",
+    "墨刀设计",
+    "墨刀原型",
+    "MockingBot"
   ],
   "platform": "atomcode",
   "min_agent_version": "1.0.0",
@@ -53,7 +56,8 @@
     "mcp-interactive",
     "html-only",
     "axure",
-    "figma"
+    "figma",
+    "modao"
   ],
   "supported_formats": [
     {
@@ -83,6 +87,13 @@
         ".rp"
       ],
       "priority": 2
+    },
+    {
+      "format": "Modao",
+      "extensions": [
+        ".html"
+      ],
+      "priority": 2
     }
   ],
   "output": {
@@ -106,7 +117,8 @@
       "zee-rp": "git clone https://github.com/LilZeeCN/zee-rp.git（模式 3）",
       "python": ">= 3.10（模式 3，激活 venv）",
       "Axure RP": "RP9 / RP11（模式 3，需本机空白模板）",
-      "Figma MCP": "接入 https://mcp.figma.com/mcp；写操作需 Full/Dev 席位"
+      "Figma MCP": "接入 https://mcp.figma.com/mcp；写操作需 Full/Dev 席位",
+      "墨刀 MCP": "接入 https://modao.cc/agent-py/ai/mcp（OAuth 或 modao-token）；需要账号权益/配额"
     }
   },
   "features": [
@@ -116,6 +128,9 @@
     "组件库配置管理",
     "双向同步与完整性校验",
     "可交互原型生成",
+    "HTML 原型外壳变体：A 顶部导航 / B 三栏标注评审 / C 直出（首次询问 + 项目级记忆）",
+    "项目令牌区注入：配色/字体按项目前端与 UI 规范，中性默认兜底，无明暗切换",
+    "Axure 风险告知：zee-rp 第三方工具风险前置告知 + GUI 接管前通知",
     "便签文档生成",
     "批量处理",
     "多格式导出（含 HTML 导出）",
@@ -127,12 +142,45 @@
     "截图转可编辑 Axure 布局",
     "Axure 母版与 .rplib 组件复用",
     "Figma 云端设计读取/创建（Remote MCP）",
+    "墨刀（Modao）适配器：官方生成型 MCP，query 翻译 → generate_html 异步生成 → continue_task 迭代",
     "Figma 席位探测、只读降级与 figma-use 写前加载",
     "组件与变量复用（Figma library / variables）",
     "编排层 + 适配器架构（Pen / Axure / Figma，OpenDesign planned）",
     "T8 只决定原生/HTML，具体工具由本 Skill 询问"
   ],
   "changelog": [
+    {
+      "version": "5.4.0",
+      "date": "2026-10-23",
+      "changes": [
+        "新增模式 5（墨刀 Modao）：官方生成型 MCP 适配器 adapters/modao/（SKILL.md + adapter.json + references/modao-mcp.md）",
+        "生成工作流：结构化意图翻译 query → generate_html 异步生成 → get_task_result 轮询 → continue_task 迭代（禁止重开新任务）→ download_generated_content 落地",
+        "产物交公共核心按 shellVariant 组装评审外壳；manifest 新增 mode modao 与 files.nativeRef provider=modao",
+        "工具选择扩展为 Pen / Axure / Figma / 墨刀（OpenDesign planned）；权益/配额降级与回退规则齐备"
+      ]
+    },
+    {
+      "version": "5.3.0",
+      "date": "2026-10-23",
+      "changes": [
+        "HTML 原型外壳与视觉解耦：新增外壳变体 A 顶部导航 / B 三栏标注评审 / C 直出",
+        "首次生成询问 shellVariant 并写入 .prototype-designer.json，后续默认沿用直到用户明确更换；换外壳仅重组装评审壳，页面与 data-* 契约不变",
+        "配色/字体改由项目令牌区按项目前端与 UI 规范注入（中性默认兜底），移除明暗切换；editorial-ink 预设降级为遗留资产",
+        "Axure 子技能新增 zee-rp 第三方工具风险告知前置闸口；接管 GUI 前通知用户明确画入执行顺序",
+        "prototype-manifest 新增 shell 字段（A/B/C），style 固定 project；新增三个外壳预览资产"
+      ]
+    },
+    {
+      "version": "5.2.0",
+      "date": "2026-10-22",
+      "changes": [
+        "新增 HTML 原型视觉样式：首次生成询问，确认后写入 .prototype-designer.json，后续默认沿用",
+        "新增 editorial-ink 纸墨编辑风：暖黑/米白双主题、宋体标题、等宽标签与藏青强调",
+        "editorial-ink 使用顶部页面切换 + 居中舞台 + 看全部备注，不使用三栏外壳",
+        "新增样式预览、editorial-ink.css 令牌与页面级备注契约",
+        "prototype-manifest 增加 style 字段"
+      ]
+    },
     {
       "version": "5.1.0",
       "date": "2026-10-22",

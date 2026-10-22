@@ -1,9 +1,9 @@
 {
   "name": "prototype-designer",
   "displayName": "页面设计技能（pen.dev / Axure / Figma；OpenDesign planned）",
-  "version": "5.1.0",
-  "description": "页面设计编排 Skill：先检查 PRD、标准控件库与设计规范，再确认产出形态（原生设计文件 + HTML 或仅 HTML）；原生工具由本 Skill 询问 Pen / Axure / Figma（OpenDesign planned）。采用编排层 + 适配器架构，原型内嵌 prototype-manifest，页面/交互可被原型转前端直接解析",
-  "description_en": "Page design skill for pen.dev, Axure and Figma — CLI-first for speed, MCP execute for fine-grained control, browser for web-to-design, zee-rp for native Axure .rp, Figma Remote MCP for cloud files",
+  "version": "5.4.0",
+  "description": "页面设计编排 Skill：先检查 PRD、标准控件库与设计规范，再确认产出形态（原生设计文件 + HTML 或仅 HTML）；原生工具由本 Skill 询问 Pen / Axure / Figma（OpenDesign planned）。采用编排层 + 适配器架构，HTML 原型外壳分 A 顶部导航 / B 三栏标注评审 / C 直出三种变体，首次询问并记住选择；配色与字体由项目令牌区按项目前端/UI 规范注入，不绑定视觉预设；Axure 子技能前置第三方工具风险告知；墨刀（Modao）官方生成型 MCP 适配器异步产出单文件 HTML（continue_task 迭代）；原型内嵌 prototype-manifest，页面/交互可被原型转前端直接解析",
+  "description_en": "Page design skill for pen.dev, Axure, Figma and Modao (MockingBot) — CLI-first for speed, MCP execute for fine-grained control, browser for web-to-design, zee-rp for native Axure .rp (third-party tool risk disclosed up front), Figma Remote MCP for cloud files, Modao generative MCP for async single-file HTML; HTML prototype shells come in three variants (A top-nav / B three-column annotate / C direct) with first-run confirmation and project-level memory, all visuals driven by project tokens",
   "author": "WikkyGao",
   "license": "MIT",
   "type": "module",
@@ -50,7 +50,10 @@
       "pen文件",
       "组件库",
       "UI设计",
-      "网页转设计"
+      "网页转设计",
+      "墨刀设计",
+      "墨刀原型",
+      "MockingBot"
     ],
     "formats": [
       ".pen",
@@ -65,5 +68,34 @@
       "axure",
       "figma"
     ]
-  }
+  },
+  "features": [
+    "HTML 原型外壳变体：A 顶部导航 / B 三栏标注评审 / C 直出（首次询问 + 项目级记忆）",
+    "项目令牌区注入：配色/字体按项目前端与 UI 规范，中性默认兜底，无明暗切换",
+    "Axure 子技能前置 zee-rp 第三方工具风险告知；接管 GUI 前通知用户",
+    "墨刀（Modao）适配器：官方生成型 MCP，query 翻译 → generate_html 异步生成 → continue_task 迭代"
+  ],
+  "changelog": [
+    {
+      "version": "5.4.0",
+      "date": "2026-10-23",
+      "changes": [
+        "新增模式 5（墨刀 Modao）：官方生成型 MCP 适配器 adapters/modao/（SKILL.md + adapter.json + references/modao-mcp.md）",
+        "生成工作流：结构化意图翻译 query → generate_html 异步生成 → get_task_result 轮询 → continue_task 迭代（禁止重开新任务）→ download_generated_content 落地",
+        "产物交公共核心按 shellVariant 组装评审外壳；manifest 新增 mode modao 与 files.nativeRef provider=modao",
+        "工具选择扩展为 Pen / Axure / Figma / 墨刀（OpenDesign planned）；权益/配额降级与回退规则齐备"
+      ]
+    },
+    {
+      "version": "5.3.0",
+      "date": "2026-10-23",
+      "changes": [
+        "HTML 原型外壳与视觉解耦：新增外壳变体 A 顶部导航 / B 三栏标注评审 / C 直出",
+        "首次生成询问 shellVariant 并写入 .prototype-designer.json，后续默认沿用直到用户明确更换；换外壳仅重组装评审壳，页面与 data-* 契约不变",
+        "配色/字体改由项目令牌区按项目前端与 UI 规范注入（中性默认兜底），移除明暗切换；editorial-ink 预设降级为遗留资产",
+        "Axure 子技能新增 zee-rp 第三方工具风险告知前置闸口；接管 GUI 前通知用户明确画入执行顺序",
+        "prototype-manifest 新增 shell 字段（A/B/C），style 固定 project；新增三个外壳预览资产"
+      ]
+    }
+  ]
 }

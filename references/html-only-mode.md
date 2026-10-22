@@ -24,9 +24,23 @@
 | `component-library.html` | HTML 组件库（可复用片段 + 可视化预览） | 是 |
 | `components.json` | 组件注册表（HTML 条目带 `source: "html"`） | 是 |
 | `design-pages.html` | 原型页面片段集合（每页带 `data-page` / `data-route`，交互节点带 `data-context`） | 是 |
-| `design-prototype.html` | 最终单文件可交互原型（三栏 shell + 所有页面 + 内嵌 `#prototype-manifest`） | 是 |
+| `design-prototype.html` | 最终单文件可交互原型（评审外壳 + 所有页面 + 内嵌 `#prototype-manifest`） | 是 |
+| `.prototype-designer.json` | 项目级样式记忆（`project` / `editorial-ink`） | 首次选择后 |
 
 所有文件放在同一目录；`design-prototype.html` 必须单文件自包含（内联 CSS/JS，不依赖外部资源）。
+
+---
+
+## 二·一、样式选择
+
+在产出形式确认后、页面设计前读取项目根 `.prototype-designer.json`：
+
+- 已有 `prototypeStyle` → 直接沿用，不再询问
+- 无值 → 询问「项目规范 project / 纸墨编辑风 editorial-ink」，确认后写入
+- 用户说「换样式」→ 重新询问并更新
+- `editorial-ink` 使用顶部导航外壳、双主题与「看全部备注」，不使用三栏
+
+完整选择流程、配置结构与令牌见 [prototype-styles.md](prototype-styles.md)。
 
 ---
 
@@ -108,6 +122,8 @@
 - 页面与组件中禁止写死颜色、字号、间距，必须引用变量
 - 若已存在 `UI Design.pen` 且无 pen 环境：先尝试从用户处获取其品牌色/字体；无法获取时按 PRD 生成默认规范并标注「默认值待确认」
 - 变量命名保持稳定，后续迭代只扩展不重命名
+- `editorial-ink` 时直接使用 [editorial-ink.css](../assets/prototypes/styles/editorial-ink.css) 的令牌，并同时展示 `data-theme="dark"` 与 `data-theme="light"` 两套值
+- `editorial-ink` 的评审外壳是顶部页面切换 + 居中舞台 + 可展开备注，不是三栏；结构见 [prototype-styles.md](prototype-styles.md) §4.3
 
 ---
 
@@ -253,7 +269,8 @@
 - 页面样式独立于原型 shell：`design-pages.html` 中可写页面 CSS，§9 需将其内联进最终单文件
 - 页面之间不直接跳转，所有跳转由 `data-context.action = "navigate"` + `target` 驱动
 - 页面命名与 PRD 的功能/页面结构保持一致，避免同义多命名
-- 组装 `design-prototype.html` 时，左栏导航项带 `data-target="<data-page 值>"`，并内嵌 `#prototype-manifest`（字段见 [prototype-generation.md](prototype-generation.md) §十）
+- 需要页面级说明时，在 `section.page` 内放 `<template data-page-note>...</template>`；`editorial-ink` 的「看全部备注」读取它
+- 组装 `design-prototype.html` 时，页面导航项带 `data-target="<data-page 值>"`，并内嵌 `#prototype-manifest`（字段见 [prototype-generation.md](prototype-generation.md) §十）
 
 ### Context 默认模板
 
@@ -270,7 +287,10 @@
 □ 无写死的颜色、字号、间距（全部来自 CSS 变量）
 □ 复用的组件结构与 component-library.html 一致
 □ design-prototype.html 内嵌 #prototype-manifest，pages 与 data-page 一一对应
-□ 左栏导航项 data-target 均能命中页面
+□ 页面导航项 data-target 均能命中页面
+□ 首次生成已确认样式；已有 .prototype-designer.json 时未重复询问
+□ editorial-ink 使用顶部页面切换，且「看全部备注」可展开 / 收起
+□ editorial-ink 的当前页备注高亮，切换页面后同步更新
 ```
 
 ---
@@ -279,12 +299,11 @@
 
 1. 解析 `design-pages.html`：收集 `data-page` 列表、每页 DOM、`data-context` 交互映射
 2. 校验 context 完整性；缺失项按默认模板补齐并回写 `design-pages.html`
-3. 将 `UI Design.html` 的 `:root` 变量与页面/组件 CSS 内联到最终文件
-4. 套用 [prototype-generation.md](prototype-generation.md) 的三栏 shell：
-   - 左侧：按 `data-page` 生成导航
-   - 中间：渲染页面 DOM，叠加水滴标注与 SVG 连线
-   - 右侧：按 `data-context` 生成功能说明与交互表
-5. 实现交互：导航、提交、删除确认、搜索 debounce、Toast、Loading、Modal、localStorage 状态保存
+3. 将 `UI Design.html` 的 `:root` 变量与页面/组件 CSS 内联到最终文件；`editorial-ink` 额外内联 `editorial-ink.css`
+4. 按已确认样式套用评审外壳：
+   - `project`：三栏 shell，左导航 / 中预览 / 右说明
+   - `editorial-ink`：顶部 `.proto` 页面切换 + `.wrap` 居中舞台 + `看全部备注`；登录 / 注册用 `.authpage` 双栏
+5. 实现交互：页面切换、备注展开 / 收起、提交、删除确认、搜索 debounce、Toast、Loading、Modal、localStorage 状态保存
 6. 输出 `design-prototype.html`（单文件自包含）
 
 ---
@@ -299,7 +318,7 @@
 | 组件库 | `控件库.pen` + `components.json` | `component-library.html` + `components.json` |
 | 交互描述 | 节点 `context` 属性（`execute` 写入） | 节点 `data-context` 属性 |
 | 页面来源 | `.pen` 页面 frame | `design-pages.html` 的 `section.page` |
-| 原型组装 | `execute` 的 `Get` → 三栏 shell | 解析 HTML → 三栏 shell |
+| 原型组装 | `execute` 的 `Get` → 按样式选择 shell | 解析 HTML → 按样式选择 shell |
 | 最终交付 | `design.pen` + `design-prototype.html` | `design-prototype.html` |
 
 ---
@@ -313,3 +332,5 @@
 | 只在最终原型里补交互 | 交互必须在 `design-pages.html` 中以 `data-context` 声明 |
 | 组件先写死、事后补登记 | 先入库注册，再在页面复用 |
 | 最终 HTML 引用外部 CSS/JS | 必须内联，保持单文件自包含 |
+| 每次生成都重复询问样式 | 读取项目根 `.prototype-designer.json`，已有 `prototypeStyle` 时直接沿用 |
+| editorial-ink 仍套三栏 | 改用顶部页面切换 + 居中舞台 + `看全部备注` |

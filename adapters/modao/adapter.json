@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.0",
+  "id": "modao",
+  "name": "墨刀 MockingBot",
+  "version": "0.1.0",
+  "status": "ready",
+  "migrationState": "extracted",
+  "nativeFormat": "Modao cloud prototype (generated HTML + preview link)",
+  "htmlPolicy": "core",
+  "requires": [
+    "modao-mcp",
+    "modao-account-with-quota"
+  ],
+  "preflight": null,
+  "capabilities": {
+    "create": true,
+    "read": false,
+    "edit": true,
+    "verify": true
+  },
+  "acceptance": [
+    "structural",
+    "native-open",
+    "preview"
+  ],
+  "entry": "SKILL.md"
+}

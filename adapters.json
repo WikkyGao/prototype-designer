@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0",
-  "updated": "2026-10-22",
+  "updated": "2026-10-23",
   "adapters": [
     {
       "id": "pen",
@@ -15,6 +15,11 @@
     {
       "id": "figma",
       "path": "adapters/figma",
+      "entry": "SKILL.md"
+    },
+    {
+      "id": "modao",
+      "path": "adapters/modao",
       "entry": "SKILL.md"
     },
     {

@@ -25,7 +25,7 @@ prototype-designer
 requirement-analysis
 ```
 
-适配器不得反向调用 `requirement-analysis`，也不得自行生成三栏 HTML 外壳。
+适配器不得反向调用 `requirement-analysis`，也不得自行生成评审外壳；HTML 外壳由公共核心按 `prototypeStyle` 生成。
 
 ## 2. 目录结构
 

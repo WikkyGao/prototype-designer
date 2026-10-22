@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微光清单 · 三栏标注评审</title>
+<style>/*INJECT_PAGE_CSS*/</style>
+<style>/*INJECT_VARIABLES*/</style>
+<style>/*INJECT_STYLE_CSS*/</style>
+</head>
+<body data-initial-page="登录">
+
+<div class="shell">
+  <aside class="nav" id="panelLeft">
+    <div class="nav-brand">
+      <div class="brand-mark">微</div>
+      <div class="brand-copy"><span class="en">GLOW LIST</span><b>微光清单</b></div>
+    </div>
+    <div class="nav-label">Prototype pages</div>
+    <nav class="nav-list" id="pageNav" aria-label="页面导航"></nav>
+    <div class="nav-foot">
+      <div class="nav-foot-row">
+        <label class="switch"><input type="checkbox" id="linesToggle" checked><span class="track"></span><span>标注连线</span></label>
+        <button class="icon-btn slim" id="themeBtn" type="button" aria-label="切换明暗主题">◐</button>
+      </div>
+      <div class="nav-foot-row">
+        <span>页面缩放</span>
+        <div class="fontctl"><button type="button" id="fontMinus" aria-label="缩小页面">A−</button><span id="fontLevel">100%</span><button type="button" id="fontPlus" aria-label="放大页面">A+</button></div>
+      </div>
+      <div class="nav-foot-row" style="color:var(--text-faint);font:8.5px/1.5 var(--font-mono);letter-spacing:.12em">
+        <span>PROJECT SHELL</span><span>v5.2</span>
+      </div>
+    </div>
+  </aside>
+
+  <div class="splitter" id="splitterLeft" role="separator" aria-orientation="vertical" aria-label="调整左栏宽度"></div>
+
+  <main class="stagewrap">
+    <div class="stagebar">
+      <span class="live"><span class="live-dot"></span>LIVE PREVIEW</span>
+      <div class="crumb"><b id="crumbPage">登录</b><span class="sep">/</span><span class="route" id="stageRoute">/login</span><span class="sep">·</span><span id="stageCount">3 条标注</span></div>
+      <div class="stage-actions">
+        <button class="icon-btn slim" id="markerToggle" type="button" aria-pressed="true" aria-label="显示或隐藏水滴标注" title="显示或隐藏水滴标注">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.2S3.4 7.1 3.4 10a4.6 4.6 0 0 0 9.2 0C12.6 7.1 8 2.2 8 2.2Z"/><path d="M6.5 10.2a1.8 1.8 0 0 0 1.6 1.5"/></svg>
+        </button>
+        <button class="icon-btn slim" id="resetLayout" type="button" aria-label="重置水滴位置" title="重置水滴位置">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 5.2A5.6 5.6 0 1 0 13.6 9"/><path d="M13.2 2.4v3.1H10"/></svg>
+        </button>
+      </div>
+    </div>
+<!--INJECT_REQBAR-->
+    <div class="viewport" id="pageViewport">
+      <div class="canvas" id="canvas">
+<!--INJECT_PAGES-->
+        <div class="marker-layer" id="markerLayer" aria-hidden="true"></div>
+      </div>
+    </div>
+  </main>
+
+  <div class="splitter" id="splitterRight" role="separator" aria-orientation="vertical" aria-label="调整右栏宽度"></div>
+
+  <aside class="notes" id="panelRight">
+    <div class="notes-head">
+      <div class="topline"><span class="eyebrow">ANNOTATIONS</span><button class="icon-btn slim" id="toggleLines" type="button" aria-pressed="true" aria-label="显示或隐藏连线" title="显示或隐藏连线"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 12.5C6 12.5 5.5 3.5 13.5 3.5"/><circle cx="2.5" cy="12.5" r="1.4"/><circle cx="13.5" cy="3.5" r="1.4"/></svg></button></div>
+      <h2>页面说明</h2>
+      <p class="desc"><b id="notePage">登录</b> · <span id="noteCount">3</span> 条标注 · 点击卡片定位</p>
+    </div>
+    <div class="notes-filter" id="typeFilter" role="group" aria-label="按类型筛选说明">
+      <button class="type-filter" type="button" data-type="all" aria-pressed="true">全部</button>
+      <button class="type-filter" type="button" data-type="feature" aria-pressed="false">功能</button>
+      <button class="type-filter" type="button" data-type="interact" aria-pressed="false">交互</button>
+      <button class="type-filter" type="button" data-type="field" aria-pressed="false">字段</button>
+      <button class="type-filter" type="button" data-type="warning" aria-pressed="false">注意</button>
+    </div>
+    <div class="notes-scroll" id="infoContent"></div>
+  </aside>
+</div>
+
+<!--INJECT_OVERLAYS-->
+
+<svg class="connections-layer" id="connectionsLayer" aria-hidden="true"></svg>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="dropGrad" cx="36%" cy="24%" r="78%">
+      <stop class="s1" offset="0%"></stop>
+      <stop class="s2" offset="42%"></stop>
+      <stop class="s3" offset="100%"></stop>
+    </radialGradient>
+  </defs>
+</svg>
+
+<script>/*INJECT_ANNOTATIONS*/</script>
+<script>
+  (function () {
+    "use strict";
+
+    var root = document.documentElement;
+    var viewport = document.getElementById("pageViewport");
+    var canvas = document.getElementById("canvas");
+    var markerLayer = document.getElementById("markerLayer");
+    var notesScroll = document.getElementById("infoContent");
+    var notesPanel = document.getElementById("panelRight");
+    var pageNav = document.getElementById("pageNav");
+    var connections = document.getElementById("connectionsLayer");
+
+    var pages = Array.prototype.slice.call(canvas.querySelectorAll(":scope > .page[data-page]"));
+    var annotations = window.PD_ANNOTATIONS || [];
+    var current = pages.length ? pages[0].dataset.page : "";
+    var activeId = null;
+    var showLines = true;
+    var showMarkers = true;
+    var typeFilter = "all";
+    var manual = {};
+    var fontScale = 1;
+    var dragState = null;
+    var suppressClick = false;
+
+    try {
+      manual = JSON.parse(localStorage.getItem("glowlist-annotation-pos-v1") || "{}") || {};
+    } catch (error) { manual = {}; }
+
+    function saveManual() {
+      try { localStorage.setItem("glowlist-annotation-pos-v1", JSON.stringify(manual)); } catch (error) {}
+    }
+
+    function pageAnnotations() {
+      return annotations.filter(function (annotation) { return annotation.page === current; });
+    }
+
+    function visibleAnnotations() {
+      return pageAnnotations().filter(function (annotation) {
+        return typeFilter === "all" || annotation.type === typeFilter;
+      });
+    }
+
+    function annotationById(id) {
+      return annotations.filter(function (annotation) { return annotation.id === id; })[0];
+    }
+
+    function markerById(id) {
+      return markerLayer.querySelector('.marker[data-annotation-id="' + id + '"]');
+    }
+
+    function cardById(id) {
+      return notesScroll.querySelector('.note-card[data-annotation-id="' + id + '"]');
+    }
+
+    function syncOffscreenCards() {
+      var pageEl = pages.filter(function (page) { return page.dataset.page === current; })[0];
+      if (!pageEl) return;
+      pageAnnotations().forEach(function (annotation) {
+        var card = cardById(annotation.id);
+        if (!card) return;
+        var target = pageEl.querySelector(annotation.target);
+        var rect = target ? target.getBoundingClientRect() : null;
+        var offscreen = !rect || rect.width === 0 || rect.height === 0;
+        card.classList.toggle("is-offscreen", offscreen);
+      });
+    }
+
+    function buildNav() {
+      if (!pageNav) return;
+      pageNav.innerHTML = pages.map(function (page, index) {
+        var count = annotations.filter(function (annotation) { return annotation.page === page.dataset.page; }).length;
+        return '<button class="nav-item" type="button" data-target="' + page.dataset.page + '" aria-current="false">' +
+          '<span class="no">' + String(index + 1).padStart(2, "0") + '</span>' +
+          '<span class="name">' + page.dataset.page + '</span>' +
+          '<span class="meta">' + count + '</span>' +
+        '</button>';
+      }).join("");
+    }
+
+    function syncNav() {
+      Array.prototype.forEach.call(pageNav.querySelectorAll(".nav-item"), function (button) {
+        var on = button.dataset.target === current;
+        button.classList.toggle("on", on);
+        button.setAttribute("aria-current", on ? "page" : "false");
+      });
+    }
+
+    function placeMarker(annotation, pageEl) {
+      var saved = manual[annotation.id];
+      if (saved && saved.page === current) {
+        return { left: saved.left, top: saved.top, offscreen: false };
+      }
+      var target = pageEl.querySelector(annotation.target);
+      if (!target) return null;
+      var stageRect = canvas.getBoundingClientRect();
+      var rect = target.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return null;
+      var x = rect.right;
+      var y = rect.top;
+      switch (annotation.anchor) {
+        case "tl": x = rect.left; y = rect.top; break;
+        case "ml": x = rect.left; y = rect.top + rect.height / 2; break;
+        case "mr": x = rect.right; y = rect.top + rect.height / 2; break;
+        case "inside-tr": x = rect.right - 18; y = rect.top; break;
+        default: x = rect.right; y = rect.top;
+      }
+      var zoom = fontScale || 1;
+      var originX = stageRect.left + canvas.clientLeft;
+      var originY = stageRect.top + canvas.clientTop;
+      x = (x - originX) / zoom + (annotation.dx || 0);
+      y = (y - originY) / zoom + (annotation.dy || 0);
+      var width = canvas.clientWidth;
+      var height = canvas.clientHeight;
+      return {
+        left: Math.max(18, Math.min(width - 18, x)),
+        top: Math.max(44, Math.min(height - 18, y)),
+        offscreen: false
+      };
+    }
+
+    function markerMarkup(annotation, number) {
+      return '<svg class="drop" viewBox="0 0 30 40" aria-hidden="true">' +
+          '<path d="M15 38.2C15 38.2 1.2 22.4 1.2 11.8C1.2 6 7.4 1.3 15 1.3C22.6 1.3 28.8 6 28.8 11.8C28.8 22.4 15 38.2 15 38.2Z" fill="url(#dropGrad)" stroke="rgba(255,255,255,.78)" stroke-width="1.1"/>' +
+          '<path d="M8.6 11.4C10.7 7.7 13.1 6 15 6" fill="none" stroke="rgba(255,255,255,.62)" stroke-width="2.1" stroke-linecap="round"/>' +
+        '</svg>' +
+        '<span class="drop-num">' + number + '</span>' +
+        '<span class="drop-tag">' + (annotation.title || "") + '</span>';
+    }
+
+    function renderMarkers() {
+      if (!markerLayer) return;
+      markerLayer.innerHTML = "";
+      var pageEl = pages.filter(function (page) { return page.dataset.page === current; })[0];
+      if (!pageEl || !showMarkers) return;
+      visibleAnnotations().forEach(function (annotation) {
+        var index = pageAnnotations().indexOf(annotation);
+        var position = placeMarker(annotation, pageEl);
+        if (!position) return;
+        var number = String(index + 1).padStart(2, "0");
+        var marker = document.createElement("div");
+        marker.className = "marker";
+        marker.dataset.annotationId = annotation.id;
+        marker.style.left = position.left + "px";
+        marker.style.top = position.top + "px";
+        marker.setAttribute("role", "button");
+        marker.setAttribute("tabindex", "0");
+        marker.setAttribute("aria-label", "标注 " + number + "：" + annotation.title);
+        marker.innerHTML = markerMarkup(annotation, number);
+        marker.addEventListener("pointerdown", startDrag);
+        marker.addEventListener("click", function (event) {
+          if (suppressClick) { suppressClick = false; return; }
+          event.stopPropagation();
+          activate(annotation.id, { scrollNote: true });
+        });
+        marker.addEventListener("dblclick", function (event) {
+          event.preventDefault();
+          delete manual[annotation.id];
+          saveManual();
+          renderMarkers();
+          requestAnimationFrame(drawConnections);
+        });
+        marker.addEventListener("keydown", function (event) {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            activate(annotation.id, { scrollNote: true });
+          }
+        });
+        markerLayer.appendChild(marker);
+      });
+      syncActive();
+    }
+
+    function noteMarkup(annotation, number, offscreen) {
+      var typeLabel = { feature: "功能", field: "字段", interact: "交互", warning: "注意", tech: "技术", todo: "待办" }[annotation.type] || "说明";
+      return '<article class="note-card type-' + annotation.type + (offscreen ? " is-offscreen" : "") + '" data-annotation-id="' + annotation.id + '" tabindex="0">' +
+        '<span class="note-port" aria-hidden="true"></span>' +
+        '<div class="note-top"><span class="note-num">' + number + '</span><span class="note-type">' + typeLabel + '</span><span class="note-page">' + annotation.page + '</span></div>' +
+        '<h4>' + annotation.title + '</h4>' +
+        '<p>' + annotation.body + '</p>' +
+        '<div class="note-foot"><span class="note-hint">点击定位 · 双击水滴可还原</span><span class="note-hint is-offscreen">当前页未出现</span><button class="locate" type="button">定位</button></div>' +
+      '</article>';
+    }
+
+    function renderNotes() {
+      if (!notesScroll) return;
+      var list = visibleAnnotations();
+      var allOnPage = pageAnnotations();
+      notesScroll.innerHTML = list.map(function (annotation) {
+        var index = allOnPage.indexOf(annotation);
+        var pageEl = pages.filter(function (page) { return page.dataset.page === current; })[0];
+        var target = pageEl ? pageEl.querySelector(annotation.target) : null;
+        var rect = target ? target.getBoundingClientRect() : null;
+        var offscreen = !rect || rect.width === 0 || rect.height === 0;
+        return noteMarkup(annotation, String(index + 1).padStart(2, "0"), offscreen);
+      }).join("");
+      if (!list.length) {
+        notesScroll.innerHTML = '<div class="empty" style="margin-top:12px"><span class="empty-mark">○</span><h3>这个类型没有标注</h3><p>切换到「全部」查看本页说明。</p></div>';
+      }
+      Array.prototype.forEach.call(notesScroll.querySelectorAll(".note-card"), function (card) {
+        card.addEventListener("click", function (event) {
+          if (event.target.closest(".locate")) return;
+          var id = card.dataset.annotationId;
+          if (activeId === id) {
+            card.classList.toggle("is-expanded");
+            return;
+          }
+          activate(id, { scrollMarker: true });
+        });
+        card.addEventListener("keydown", function (event) {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            activate(card.dataset.annotationId, { scrollMarker: true });
+          }
+        });
+        var locate = card.querySelector(".locate");
+        if (locate) {
+          locate.addEventListener("click", function (event) {
+            event.stopPropagation();
+            activate(card.dataset.annotationId, { scrollMarker: true });
+          });
+        }
+      });
+      syncActive();
+    }
+
+    function syncActive() {
+      Array.prototype.forEach.call(markerLayer.querySelectorAll(".marker"), function (marker) {
+        marker.classList.toggle("is-active", marker.dataset.annotationId === activeId);
+      });
+      Array.prototype.forEach.call(notesScroll.querySelectorAll(".note-card"), function (card) {
+        card.classList.toggle("is-active", card.dataset.annotationId === activeId);
+      });
+      Array.prototype.forEach.call(connections.querySelectorAll("path, circle"), function (el) {
+        el.classList.toggle("is-active", el.dataset.annotationId === activeId);
+      });
+    }
+
+    function activate(id, options) {
+      options = options || {};
+      activeId = id;
+      syncActive();
+      var card = cardById(id);
+      if (options.scrollNote && card) {
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      var marker = markerById(id);
+      if (options.scrollMarker && marker) {
+        marker.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+        marker.classList.add("is-active");
+        setTimeout(function () { marker.focus({ preventScroll: true }); }, 280);
+      }
+      requestAnimationFrame(drawConnections);
+    }
+
+    function pathFor(x1, y1, x2, y2) {
+      var dx = x2 - x1;
+      var dy = y2 - y1;
+      var dir = dx >= 0 ? 1 : -1;
+      var reach = Math.max(18, Math.min(92, Math.abs(dx) * 0.52));
+      var c1x = x1 + dir * reach;
+      var c2x = x2 - dir * reach;
+      var c1y = y1 + dy * 0.18;
+      var c2y = y2 - dy * 0.1;
+      return "M " + x1 + " " + y1 + " C " + c1x + " " + c1y + ", " + c2x + " " + c2y + ", " + x2 + " " + y2;
+    }
+
+    function drawConnections() {
+      if (!connections) return;
+      connections.innerHTML = "";
+      if (!showLines || !showMarkers) return;
+      var notesRect = notesPanel.getBoundingClientRect();
+      var viewportRect = viewport.getBoundingClientRect();
+      visibleAnnotations().forEach(function (annotation) {
+        var marker = markerById(annotation.id);
+        var card = cardById(annotation.id);
+        if (!marker || !card) return;
+        var mR = marker.getBoundingClientRect();
+        var pR = card.querySelector(".note-port").getBoundingClientRect();
+        if (!mR.width || !pR.width) return;
+        if (mR.bottom < viewportRect.top || mR.top > viewportRect.bottom) return;
+        if (mR.right < viewportRect.left || mR.left > viewportRect.right) return;
+        if (pR.bottom < notesRect.top || pR.top > notesRect.bottom) return;
+        var x1 = mR.left + mR.width / 2;
+        var y1 = mR.bottom;
+        var x2 = pR.left + pR.width / 2;
+        var y2 = pR.top + pR.height / 2;
+        var d = pathFor(x1, y1, x2, y2);
+        var halo = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        halo.setAttribute("class", "conn-halo");
+        halo.setAttribute("d", d);
+        halo.dataset.annotationId = annotation.id;
+        var line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        line.setAttribute("class", "conn");
+        line.setAttribute("d", d);
+        line.dataset.annotationId = annotation.id;
+        var port = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        port.setAttribute("class", "conn-port");
+        port.setAttribute("cx", x2);
+        port.setAttribute("cy", y2);
+        port.setAttribute("r", 3.2);
+        port.dataset.annotationId = annotation.id;
+        if (annotation.id === activeId) {
+          halo.classList.add("is-active");
+          line.classList.add("is-active");
+          port.classList.add("is-active");
+        }
+        connections.appendChild(halo);
+        connections.appendChild(line);
+        connections.appendChild(port);
+      });
+    }
+
+    function showPage(name) {
+      var target = pages.filter(function (page) { return page.dataset.page === name; })[0] || pages[0];
+      if (!target) return;
+      pages.forEach(function (page) {
+        var active = page === target;
+        page.hidden = !active;
+        page.classList.toggle("is-active", active);
+      });
+      current = target.dataset.page;
+      activeId = null;
+      syncNav();
+      document.getElementById("crumbPage").textContent = current;
+      document.getElementById("stageRoute").textContent = target.dataset.route || "";
+      document.getElementById("notePage").textContent = current;
+      renderMarkers();
+      renderNotes();
+      var count = pageAnnotations().length;
+      document.getElementById("noteCount").textContent = String(count);
+      document.getElementById("stageCount").textContent = count + " 条标注";
+      viewport.scrollTo({ top: 0, behavior: "smooth" });
+      requestAnimationFrame(function () { requestAnimationFrame(drawConnections); });
+    }
+
+    function startDrag(event) {
+      if (event.button !== undefined && event.button !== 0) return;
+      event.preventDefault();
+      var marker = event.currentTarget;
+      var id = marker.dataset.annotationId;
+      var left = parseFloat(marker.style.left) || 0;
+      var top = parseFloat(marker.style.top) || 0;
+      dragState = { marker: marker, id: id, startX: event.clientX, startY: event.clientY, left: left, top: top, moved: false };
+      marker.classList.add("dragging");
+      marker.setPointerCapture(event.pointerId);
+      marker.addEventListener("pointermove", moveDrag);
+      marker.addEventListener("pointerup", endDrag);
+      marker.addEventListener("pointercancel", endDrag);
+    }
+
+    function moveDrag(event) {
+      if (!dragState) return;
+      event.preventDefault();
+      var dx = event.clientX - dragState.startX;
+      var dy = event.clientY - dragState.startY;
+      if (Math.abs(dx) + Math.abs(dy) > 2) dragState.moved = true;
+      var zoom = fontScale || 1;
+      var left = Math.max(18, Math.min(canvas.clientWidth - 18, dragState.left + dx / zoom));
+      var top = Math.max(44, Math.min(canvas.clientHeight - 18, dragState.top + dy / zoom));
+      dragState.marker.style.left = left + "px";
+      dragState.marker.style.top = top + "px";
+      drawConnections();
+    }
+
+    function endDrag(event) {
+      if (!dragState) return;
+      var marker = dragState.marker;
+      marker.classList.remove("dragging");
+      marker.removeEventListener("pointermove", moveDrag);
+      marker.removeEventListener("pointerup", endDrag);
+      marker.removeEventListener("pointercancel", endDrag);
+      if (dragState.moved) {
+        suppressClick = true;
+        manual[dragState.id] = {
+          page: current,
+          left: parseFloat(marker.style.left),
+          top: parseFloat(marker.style.top)
+        };
+        saveManual();
+        setTimeout(function () { suppressClick = false; }, 60);
+      }
+      dragState = null;
+      drawConnections();
+    }
+
+    function setLines(on) {
+      showLines = on;
+      var buttons = [document.getElementById("linesToggle"), document.getElementById("toggleLines")];
+      buttons.forEach(function (el) {
+        if (!el) return;
+        if (el.tagName === "INPUT") el.checked = on;
+        else el.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+      drawConnections();
+    }
+
+    function setMarkers(on) {
+      showMarkers = on;
+      var button = document.getElementById("markerToggle");
+      if (button) button.setAttribute("aria-pressed", on ? "true" : "false");
+      renderMarkers();
+      requestAnimationFrame(drawConnections);
+    }
+
+    function setFilter(type) {
+      typeFilter = type;
+      Array.prototype.forEach.call(document.querySelectorAll(".type-filter"), function (button) {
+        button.setAttribute("aria-pressed", button.dataset.type === type ? "true" : "false");
+      });
+      if (activeId && !visibleAnnotations().some(function (a) { return a.id === activeId; })) activeId = null;
+      renderMarkers();
+      renderNotes();
+      requestAnimationFrame(drawConnections);
+    }
+
+    function setFontScale(next) {
+      fontScale = Math.max(.85, Math.min(1.18, Math.round(next * 100) / 100));
+      canvas.style.zoom = fontScale;
+      canvas.style.width = Math.min(100, 100 / fontScale) + "%";
+      var label = document.getElementById("fontLevel");
+      if (label) label.textContent = Math.round(fontScale * 100) + "%";
+      requestAnimationFrame(function () {
+        renderMarkers();
+        requestAnimationFrame(drawConnections);
+      });
+    }
+
+    function setTheme(theme) {
+      root.dataset.theme = theme;
+      try { localStorage.setItem("prototype-designer-theme", theme); } catch (error) {}
+      var button = document.getElementById("themeBtn");
+      if (button) {
+        button.textContent = theme === "dark" ? "◑" : "◐";
+        button.setAttribute("aria-label", theme === "dark" ? "切换到亮色主题" : "切换到暗色主题");
+      }
+      setTimeout(drawConnections, 60);
+    }
+
+    function bindSplitter(splitter, side) {
+      if (!splitter) return;
+      var dragging = false;
+      splitter.addEventListener("pointerdown", function (event) {
+        event.preventDefault();
+        dragging = true;
+        splitter.setPointerCapture(event.pointerId);
+        document.body.style.cursor = "col-resize";
+      });
+      splitter.addEventListener("pointermove", function (event) {
+        if (!dragging) return;
+        var rect = document.documentElement.getBoundingClientRect();
+        if (side === "left") {
+          var left = Math.max(168, Math.min(280, event.clientX - rect.left));
+          root.style.setProperty("--left-w", left + "px");
+        } else {
+          var right = Math.max(280, Math.min(460, rect.right - event.clientX));
+          root.style.setProperty("--right-w", right + "px");
+        }
+        requestAnimationFrame(drawConnections);
+      });
+      function stop() {
+        if (!dragging) return;
+        dragging = false;
+        document.body.style.cursor = "";
+        drawConnections();
+      }
+      splitter.addEventListener("pointerup", stop);
+      splitter.addEventListener("pointercancel", stop);
+    }
+
+    pageNav.addEventListener("click", function (event) {
+      var button = event.target.closest(".nav-item");
+      if (button) showPage(button.dataset.target);
+    });
+    document.getElementById("linesToggle").addEventListener("change", function (event) { setLines(event.target.checked); });
+    document.getElementById("toggleLines").addEventListener("click", function () { setLines(!showLines); });
+    document.getElementById("markerToggle").addEventListener("click", function () { setMarkers(!showMarkers); });
+    document.getElementById("resetLayout").addEventListener("click", function () {
+      manual = {};
+      saveManual();
+      renderMarkers();
+      requestAnimationFrame(drawConnections);
+    });
+    document.getElementById("themeBtn").addEventListener("click", function () {
+      setTheme(root.dataset.theme === "dark" ? "light" : "dark");
+    });
+    document.getElementById("fontMinus").addEventListener("click", function () { setFontScale(fontScale - .05); });
+    document.getElementById("fontPlus").addEventListener("click", function () { setFontScale(fontScale + .05); });
+    document.querySelectorAll(".type-filter").forEach(function (button) {
+      button.addEventListener("click", function () { setFilter(button.dataset.type); });
+    });
+
+    bindSplitter(document.getElementById("splitterLeft"), "left");
+    bindSplitter(document.getElementById("splitterRight"), "right");
+
+    viewport.addEventListener("scroll", function () { requestAnimationFrame(drawConnections); }, { passive: true });
+    notesScroll.addEventListener("scroll", function () { requestAnimationFrame(drawConnections); }, { passive: true });
+    window.addEventListener("resize", function () { setTimeout(drawConnections, 100); });
+    document.addEventListener("pd:page", function () { setTimeout(drawConnections, 80); });
+
+    var syncQueued = false;
+    function queueAnnotationSync() {
+      if (syncQueued) return;
+      syncQueued = true;
+      requestAnimationFrame(function () {
+        syncQueued = false;
+        renderMarkers();
+        syncOffscreenCards();
+        drawConnections();
+      });
+    }
+    if (window.MutationObserver) {
+      var pageObserver = new MutationObserver(queueAnnotationSync);
+      pages.forEach(function (page) {
+        pageObserver.observe(page, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden"] });
+      });
+    }
+
+    window.PD = { showPage: showPage, current: function () { return current; } };
+
+    var savedTheme = root.dataset.theme;
+    try { savedTheme = localStorage.getItem("prototype-designer-theme") || savedTheme; } catch (error) {}
+    setTheme(savedTheme === "light" ? "light" : "dark");
+    buildNav();
+    showPage(document.body.getAttribute("data-initial-page") || current);
+    setTimeout(drawConnections, 200);
+  })();
+</script>
+<script type="application/json" id="prototype-manifest"><!--INJECT_MANIFEST--></script>
+<script>/*INJECT_PAGE_JS*/</script>
+</body>
+</html>

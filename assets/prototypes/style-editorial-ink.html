@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-style="editorial-ink" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>纸墨编辑风 · 原型样式预览</title>
+<link rel="stylesheet" href="styles/editorial-ink.css">
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem("prototype-designer-theme");
+      if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+    } catch (error) {}
+  })();
+</script>
+</head>
+<body>
+<div class="proto">
+  <span class="pl">PROTOTYPE</span>
+  <nav class="pnav" id="pnav" aria-label="原型页面">
+    <button type="button" data-target="登录" class="on">01 登录</button>
+    <button type="button" data-target="注册">02 注册</button>
+    <button type="button" data-target="工作台">03 工作台</button>
+    <button type="button" data-target="题库归属">04 题库归属</button>
+  </nav>
+  <div class="psp">
+    <button class="theme-toggle" type="button" id="themeToggle" aria-label="切换明暗主题">
+      <span class="theme-icon" id="themeIcon">◐</span>
+      <span id="themeLabel">DARK</span>
+    </button>
+    <button class="btn" type="button" id="allBtn" aria-expanded="false" title="展开或收起所有页面说明">看全部备注</button>
+  </div>
+  <div class="note" id="protoNote" hidden></div>
+</div>
+
+<main class="wrap stage" id="stage">
+  <section class="page" data-page="登录" data-route="/login">
+    <template data-page-note><b>Q34 已定：未登录直接落 /login，工作台不可见。</b>左侧是品牌说明，右侧是登录卡；窄屏时左侧折叠成一条横条。页脚带服务状态，让用户登录前就知道服务通不通。</template>
+    <div class="authpage">
+      <aside class="authaside">
+        <div class="brand">
+          <div class="brand-mark">墨</div>
+          <div>
+            <span class="en">STUDY WORKBENCH</span>
+            <b>学习工作台</b>
+          </div>
+        </div>
+        <h2>把一个账号，<br>接上一整年的学习进度。</h2>
+        <p class="lead">做题、错题本、学习计划、连续天数，全部跟着账号走。换设备、换浏览器，打开就是上次停下的地方。</p>
+        <div class="pts">
+          <div class="pt"><span class="n">1</span><span>进度按账号隔离，与他人互不可见</span></div>
+          <div class="pt"><span class="n">2</span><span>内置题库可复制为「我的题库」再改，改完旧进度不丢</span></div>
+          <div class="pt"><span class="n">3</span><span>登录态 30 天有效，手机上也能随时接着学</span></div>
+        </div>
+        <div class="foot">内网部署 · 仅本人可访问<br>服务状态检测中…</div>
+      </aside>
+      <div class="authmain">
+        <div class="ah">登录</div>
+        <div class="as">用邮箱和密码进入你的学习工作台</div>
+        <form onsubmit="return false">
+          <div class="field" style="margin-bottom:14px">
+            <label for="loginEmail">邮箱 <span style="color:var(--bad)">*</span></label>
+            <input class="input" id="loginEmail" type="email" placeholder="you@example.com" value="wiky@example.com">
+          </div>
+          <div class="field">
+            <label for="loginPassword">密码 <span style="color:var(--bad)">*</span></label>
+            <input class="input" id="loginPassword" type="password" value="secret123">
+          </div>
+          <div class="frow2">
+            <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-muted)">
+              <input type="checkbox" checked> 保持登录
+            </label>
+            <span style="font-size:11.5px;color:var(--text-faint)">30 天内免登录</span>
+          </div>
+          <button class="btn btn-primary wide" type="submit" style="margin-top:18px">登录</button>
+          <div class="jump">
+            <span>还没有账号？</span>
+            <a href="#" data-goto="注册">用邮箱注册</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" data-page="注册" data-route="/register" hidden>
+    <template data-page-note><b>Q1 与 Q15 存在冲突：</b>仅白名单邮箱，但先不做邮件。本页按全功能版画：邮箱 → 人机验证 → 设置密码。若最终改走管理员手动建号，本页整体删除，登录页注册入口一并去掉。</template>
+    <div class="authpage">
+      <aside class="authaside">
+        <div class="brand">
+          <div class="brand-mark">墨</div>
+          <div>
+            <span class="en">STUDY WORKBENCH</span>
+            <b>学习工作台</b>
+          </div>
+        </div>
+        <h2>先建立身份，<br>再开始累积。</h2>
+        <p class="lead">注册后需要完成邮箱验证。验证成功后的首次登录，才适合做旧数据认领，避免新账号无法进入。</p>
+        <div class="pts">
+          <div class="pt"><span class="n">1</span><span>仅白名单邮箱可注册</span></div>
+          <div class="pt"><span class="n">2</span><span>邮箱验证后才可登录</span></div>
+          <div class="pt"><span class="n">3</span><span>重发验证邮件每天最多 3 封</span></div>
+        </div>
+        <div class="foot">注册入口与登录页保持一致<br>避免两套文案与两套校验</div>
+      </aside>
+      <div class="authmain">
+        <div class="ah">注册</div>
+        <div class="as">使用工作邮箱创建账号，稍后会收到验证邮件</div>
+        <form onsubmit="return false">
+          <div class="field" style="margin-bottom:14px">
+            <label for="regEmail">邮箱 <span style="color:var(--bad)">*</span></label>
+            <input class="input" id="regEmail" type="email" placeholder="name@company.com">
+          </div>
+          <div class="field" style="margin-bottom:14px">
+            <label for="regPassword">设置密码 <span style="color:var(--bad)">*</span></label>
+            <input class="input" id="regPassword" type="password" placeholder="至少 8 位，含数字与符号">
+          </div>
+          <div class="field">
+            <label for="regCode">验证码 <span style="color:var(--bad)">*</span></label>
+            <div style="display:flex;gap:8px">
+              <input class="input" id="regCode" placeholder="请输入验证码">
+              <button class="btn" type="button" style="white-space:nowrap">获取验证码</button>
+            </div>
+          </div>
+          <button class="btn btn-primary wide" type="submit" style="margin-top:18px">创建账号</button>
+          <div class="jump">
+            <span>已有账号？</span>
+            <a href="#" data-goto="登录">返回登录</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" data-page="工作台" data-route="/workspace" hidden>
+    <template data-page-note><b>Q33 已定：头像取代顶栏设置按钮。</b>主题、导入导出、重置、题库管理与使用引导全部收进下拉。顶栏左到右：连接状态 → 学习日历 → 头像。</template>
+    <div class="top">
+      <div>
+        <h1>学习工作台</h1>
+        <p class="sub">连接状态 → 学习日历 → 头像。主题、导入导出、重置与题库管理收进头像下拉。</p>
+      </div>
+      <div class="acts">
+        <button class="btn" type="button">导入进度</button>
+        <button class="btn btn-primary" type="button">开始今日练习</button>
+      </div>
+    </div>
+    <div class="statbar" style="margin-bottom:24px">
+      <div class="stat"><div class="k">连续天数</div><div class="v">18</div></div>
+      <div class="stat"><div class="k">今日题量</div><div class="v">42</div></div>
+      <div class="stat"><div class="k">正确率</div><div class="v">86%</div></div>
+      <div class="stat"><div class="k">待复习</div><div class="v">27</div></div>
+    </div>
+    <div class="card" style="padding:20px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:12px">
+        <div>
+          <div class="eyebrow">RECENT ACTIVITY</div>
+          <h2 style="margin:6px 0 0;font-size:20px">最近练习</h2>
+        </div>
+        <button class="btn" type="button">查看全部</button>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr><th>题库</th><th>进度</th><th>正确率</th><th>状态</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>系统架构基础</td><td>128 / 240</td><td>88%</td><td><span class="badge is-ok">进行中</span></td></tr>
+          <tr><td>分布式系统</td><td>64 / 180</td><td>82%</td><td><span class="badge is-ok">进行中</span></td></tr>
+          <tr><td>数据库设计</td><td>0 / 120</td><td>—</td><td><span class="badge is-warn">未开始</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="page" data-page="题库归属" data-route="/banks" hidden>
+    <template data-page-note><b>Q10–Q14 已定：</b>内置题库只读，可复制为我的题库后编辑；改题库不丢旧进度；题库管理按账号隔离。共享标记表示维护权归创建者，别人只能引用。</template>
+    <div class="top">
+      <div>
+        <h1>题库归属</h1>
+        <p class="sub">内置题库只读，可复制为「我的题库」后编辑；改题库不丢旧进度，题库管理按账号隔离。</p>
+      </div>
+      <div class="acts">
+        <button class="btn" type="button">导入题库</button>
+        <button class="btn btn-primary" type="button">新建题库</button>
+      </div>
+    </div>
+    <div class="tabs" role="tablist" aria-label="题库筛选">
+      <button class="on" type="button" role="tab" aria-selected="true">全部</button>
+      <button type="button" role="tab" aria-selected="false">我的</button>
+      <button type="button" role="tab" aria-selected="false">共享</button>
+    </div>
+    <div class="card" style="padding:8px 20px 12px">
+      <table class="data-table">
+        <thead>
+          <tr><th>题库</th><th>来源</th><th>题目数</th><th>维护权</th><th>状态</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>系统架构基础</td><td>内置</td><td>240</td><td>只读</td><td><span class="badge is-ok">已复制</span></td></tr>
+          <tr><td>我的架构错题</td><td>我的</td><td>86</td><td>可编辑</td><td><span class="badge">编辑中</span></td></tr>
+          <tr><td>团队共享题库</td><td>共享</td><td>312</td><td>创建者</td><td><span class="badge is-warn">引用中</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note-box info" style="margin-top:14px">共享题库只转移维护权，不复制题目；引用方保留自己的练习进度。</div>
+  </section>
+</main>
+
+<script>
+  var state = { page: "登录", showAll: false };
+  var pnav = document.getElementById("pnav");
+  var stage = document.getElementById("stage");
+  var protoNote = document.getElementById("protoNote");
+  var allBtn = document.getElementById("allBtn");
+
+  function renderNotes() {
+    protoNote.hidden = !state.showAll;
+    allBtn.textContent = state.showAll ? "收起备注" : "看全部备注";
+    allBtn.setAttribute("aria-expanded", state.showAll ? "true" : "false");
+    protoNote.innerHTML = Array.from(stage.querySelectorAll(".page")).map(function (section) {
+      var note = section.querySelector("template[data-page-note]");
+      var text = note ? note.innerHTML : "本页暂无说明";
+      var cls = section.dataset.page === state.page ? "note-item is-current" : "note-item";
+      return '<div class="' + cls + '">· ' + text + '</div>';
+    }).join("");
+  }
+
+  function render() {
+    pnav.querySelectorAll("button").forEach(function (button) {
+      var on = button.dataset.target === state.page;
+      button.classList.toggle("on", on);
+      button.setAttribute("aria-current", on ? "page" : "false");
+    });
+    stage.querySelectorAll(".page").forEach(function (section) {
+      var on = section.dataset.page === state.page;
+      section.hidden = !on;
+      section.classList.toggle("is-active", on);
+    });
+    renderNotes();
+  }
+
+  pnav.addEventListener("click", function (event) {
+    var button = event.target.closest("button[data-target]");
+    if (!button) return;
+    state.page = button.dataset.target;
+    render();
+    window.scrollTo({ top: 0, behavior: "auto" });
+  });
+
+  document.addEventListener("click", function (event) {
+    var link = event.target.closest("[data-goto]");
+    if (!link) return;
+    event.preventDefault();
+    state.page = link.dataset.goto;
+    render();
+    window.scrollTo({ top: 0, behavior: "auto" });
+  });
+
+  allBtn.addEventListener("click", function () {
+    state.showAll = !state.showAll;
+    renderNotes();
+  });
+
+  document.getElementById("themeToggle").addEventListener("click", function () {
+    var root = document.documentElement;
+    var next = root.dataset.theme === "light" ? "dark" : "light";
+    root.dataset.theme = next;
+    try { localStorage.setItem("prototype-designer-theme", next); } catch (error) {}
+    document.getElementById("themeIcon").textContent = next === "light" ? "◑" : "◐";
+    document.getElementById("themeLabel").textContent = next.toUpperCase();
+  });
+
+  document.getElementById("themeIcon").textContent = document.documentElement.dataset.theme === "light" ? "◑" : "◐";
+  document.getElementById("themeLabel").textContent = document.documentElement.dataset.theme.toUpperCase();
+  render();
+</script>
+</body>
+</html>

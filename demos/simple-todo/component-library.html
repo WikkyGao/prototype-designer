@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微光清单 · HTML 控件库</title>
+<style>
+  body { margin: 0; padding: 32px; background: #F4F1E8; color: #1E1D1A; font: 14px/1.7 "PingFang SC", system-ui, sans-serif; }
+  h1 { font: 600 28px/1.3 "Songti SC", Georgia, serif; margin: 0 0 6px; }
+  p { color: #5F5C54; margin: 0 0 28px; }
+  section { margin: 0 0 28px; padding: 20px; border: 1px solid rgba(30,29,26,.12); border-radius: 12px; background: #FCFAF4; }
+  h2 { margin: 0 0 12px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #87837A; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(30,29,26,.08); }
+  .row:last-child { border-bottom: 0; }
+  .box { width: 18px; height: 18px; border: 1.5px solid #2F4F77; border-radius: 5px; }
+  .box.on { background: #2F4F77; box-shadow: inset 0 0 0 3px #FCFAF4; }
+  .title { flex: 1; }
+  .meta { color: #87837A; font-size: 12px; }
+  .tag { padding: 1px 7px; border: 1px solid rgba(30,29,26,.16); border-radius: 999px; font: 10px/1.6 "JetBrains Mono", monospace; color: #5F5C54; }
+  .prio { font: 10px/1.6 "JetBrains Mono", monospace; color: #963B32; }
+  code { padding: 2px 6px; border-radius: 4px; background: #EFEBDF; font: 11px/1.5 "JetBrains Mono", monospace; }
+</style>
+</head>
+<body>
+  <h1>微光清单 · HTML 控件库</h1>
+  <p>可复用片段以 <code>&lt;template data-component="..."&gt;</code> 存于此文件，注册表见 <code>components.json</code>。</p>
+
+  <section>
+    <h2>task-row</h2>
+    <template data-component="task-row">
+      <li class="task">
+        <button class="task-check" type="button" aria-label="标记完成" aria-pressed="false" data-context='{"trigger":"click","action":"toggle","description":"切换任务完成状态"}'>
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.4 12 13 4.5"/></svg>
+        </button>
+        <button class="task-main" type="button" data-context='{"trigger":"click","action":"open","target":"任务详情"}'>
+          <span class="task-title">整理本周读书笔记</span>
+          <span class="task-meta"><span class="tag">阅读</span><span class="task-time">09:30</span></span>
+        </button>
+        <span class="prio prio-high">高</span>
+        <button class="icon-btn task-del" type="button" aria-label="删除任务" data-context='{"trigger":"click","action":"delete","confirm":"确认删除这条任务？"}'>
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4h10M6 4V2.8h4V4m-6 0 .7 9h6.6l.7-9"/></svg>
+        </button>
+      </li>
+    </template>
+  </section>
+
+  <section>
+    <h2>stat</h2>
+    <template data-component="stat">
+      <div class="stat">
+        <span class="stat-k">今日完成</span>
+        <strong class="stat-v">3<span class="stat-unit">/ 6</span></strong>
+        <span class="stat-note">比昨天多 1 件</span>
+      </div>
+    </template>
+  </section>
+
+  <section>
+    <h2>toast</h2>
+    <template data-component="toast">
+      <div class="toast" role="status">
+        <span class="toast-dot"></span><span class="toast-msg">已保存</span>
+      </div>
+    </template>
+  </section>
+
+  <section>
+    <h2>note-card</h2>
+    <template data-component="note-card">
+      <article class="note-card" tabindex="0">
+        <span class="note-port" aria-hidden="true"></span>
+        <div class="note-top"><span class="note-num">01</span><span class="note-type">交互</span><span class="note-page">今日清单</span></div>
+        <h4>新建任务</h4>
+        <p>打开模态框，标题必填，提交后插入列表顶部。</p>
+      </article>
+    </template>
+  </section>
+</body>
+</html>

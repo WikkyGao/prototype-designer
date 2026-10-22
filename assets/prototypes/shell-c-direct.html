@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<!--
+  变体 C · 直出版（头部页面菜单 + 右下角需求说明面板，无水滴无连线）
+  外壳不绑定视觉：下方「项目令牌」区由具体项目的前端 / UI 规范注入，
+  未提供规范时使用中性默认值；外壳与页面样式只引用变量。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>变体 C · 直出版 · 社区轻发言</title>
+<style>
+/* ============================================================
+   项目令牌（PROJECT TOKENS）
+   由项目前端 / UI 规范注入；未提供规范时使用以下中性默认值。
+   换项目时只改这一段。
+   ============================================================ */
+:root {
+  --font-sans: system-ui, -apple-system, "PingFang SC", "HarmonyOS Sans SC", "MiSans", "Microsoft YaHei", sans-serif;
+  --font-meta: ui-monospace, "SF Mono", "JetBrains Mono", Consolas, monospace;
+
+  --bg: #F3F4F6;
+  --surface: #FFFFFF;
+  --surface-2: #F7F8FA;
+  --border: #E4E7EC;
+  --border-strong: #CBD2DC;
+
+  --text: #1F2429;
+  --text-2: #5C6470;
+  --text-3: #9096A0;
+
+  --acc: #3B6EF0;
+  --acc-hover: #2E5BD7;
+  --acc-soft: rgba(59, 110, 240, .12);
+  --annot: #E8833A;
+
+  --ok: #2E9E62;
+  --warn: #D98A1F;
+  --bad: #D64545;
+
+  --t-feature: #3B6EF0;
+  --t-field: #2E9E62;
+  --t-interact: #7C5CBF;
+  --t-warning: #D98A1F;
+
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --dur: .2s;
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  --shadow-lg: 0 24px 60px rgba(31, 36, 41, .18);
+}
+</style>
+<style>
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font:14px/1.6 var(--font-sans); -webkit-font-smoothing:antialiased; }
+button { font:inherit; }
+:focus-visible { outline:2px solid var(--acc); outline-offset:2px; }
+
+.topbar { position:sticky; top:0; z-index:80; display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:10px 20px; border-bottom:1px solid var(--border-strong); background:var(--surface); }
+.brand { display:flex; align-items:center; gap:10px; }
+.brand-mark { display:grid; place-items:center; width:32px; height:32px; border:1px solid var(--border-strong); border-radius:8px; background:var(--surface-2); color:var(--acc); font:600 15px/1 var(--font-sans); }
+.brand .copy .en { display:block; color:var(--text-3); font:500 8px/1.4 var(--font-meta); letter-spacing:.16em; }
+.brand .copy b { display:block; color:var(--text); font:600 14.5px/1.3 var(--font-sans); }
+.pnav { display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
+.pnav button { padding:6px 12px; border:1px solid var(--border); border-radius:var(--r-xs); background:var(--surface); color:var(--text-2); font:400 12.5px/1.5 var(--font-sans); cursor:pointer; transition:all var(--dur) var(--ease); }
+.pnav button:hover { border-color:var(--border-strong); color:var(--text); }
+.pnav button.on { border-color:var(--acc); background:var(--acc); color:#fff; }
+.pnav button .no { margin-right:6px; color:var(--text-3); font:10px/1.5 var(--font-meta); }
+.pnav button.on .no { color:rgba(255,255,255,.72); }
+
+.reqbar { display:flex; align-items:flex-start; gap:10px; padding:8px 20px; border-bottom:1px solid var(--border); background:var(--surface-2); color:var(--text-2); font-size:11.5px; line-height:1.7; }
+.reqbar .req-tag { flex:none; margin-top:1px; padding:0 6px; border:1px solid var(--annot); border-radius:3px; color:var(--annot); font:500 8.5px/1.65 var(--font-meta); letter-spacing:.06em; white-space:nowrap; }
+.reqbar p { min-width:0; margin:0; }
+.reqbar b { color:var(--text); }
+.reqbar .req-meta { flex:none; margin-left:auto; color:var(--text-3); font:8.5px/1.8 var(--font-meta); letter-spacing:.03em; white-space:nowrap; }
+
+.wrap { width:min(880px,100%); margin:0 auto; padding:28px 24px 150px; }
+.page { position:relative; }
+.page[hidden] { display:none !important; }
+.page.is-active { animation:pageIn .25s var(--ease) both; }
+@keyframes pageIn { from { opacity:0; } to { opacity:1; } }
+
+/* ---------- 右下角需求说明面板 ---------- */
+.notes-float { position:fixed; right:18px; bottom:18px; z-index:90; width:min(348px,calc(100vw - 24px)); max-height:min(72vh,640px); display:flex; flex-direction:column; overflow:hidden; border:1px solid var(--border-strong); border-radius:var(--r-md); background:var(--surface); box-shadow:var(--shadow-lg); }
+.nf-head { display:flex; align-items:center; gap:8px; flex:none; padding:11px 14px; border-bottom:1px solid var(--border); background:var(--surface-2); cursor:pointer; user-select:none; }
+.notes-float.collapsed .nf-head { border-bottom:0; }
+.nf-head .nf-title { font:600 13.5px/1.4 var(--font-sans); color:var(--text); white-space:nowrap; }
+.nf-head .nf-title b { color:var(--annot); }
+.nf-head .nf-meta { margin-left:auto; color:var(--text-3); font:9px/1.6 var(--font-meta); letter-spacing:.03em; white-space:nowrap; }
+.nf-head .fold { flex:none; color:var(--text-3); font-size:12px; transition:transform var(--dur) var(--ease); }
+.notes-float.collapsed .nf-head .fold { transform:rotate(-90deg); }
+.nf-actions { flex:none; display:flex; align-items:center; gap:6px; padding:7px 12px; border-bottom:1px solid var(--border); }
+.nf-actions .hint { color:var(--text-3); font:9px/1.6 var(--font-meta); }
+.nf-actions button { margin-left:auto; padding:2px 8px; border:1px solid var(--border); border-radius:4px; background:transparent; color:var(--text-2); font:10px/1.6 var(--font-meta); cursor:pointer; }
+.nf-actions button:hover { border-color:var(--border-strong); color:var(--text); }
+.nf-body { flex:1; min-height:0; overflow:auto; scrollbar-width:thin; }
+.notes-float.collapsed .nf-actions, .notes-float.collapsed .nf-body { display:none; }
+.nf-card { --type:var(--t-feature); position:relative; border-bottom:1px solid var(--border); }
+.nf-card:last-child { border-bottom:0; }
+.nf-card::before { content:""; position:absolute; left:0; top:10px; bottom:10px; width:2px; background:var(--type); opacity:.75; }
+.nf-card.type-feature { --type:var(--t-feature); }
+.nf-card.type-field { --type:var(--t-field); }
+.nf-card.type-interact { --type:var(--t-interact); }
+.nf-card.type-warning { --type:var(--t-warning); }
+.nf-card-head { display:flex; align-items:center; gap:7px; min-width:0; padding:10px 12px 10px 14px; cursor:pointer; user-select:none; transition:background var(--dur) var(--ease); }
+.nf-card-head:hover { background:var(--surface-2); }
+.nf-card.is-flash .nf-card-head { background:var(--acc-soft); }
+.nf-card-head .no { flex:none; color:var(--type); font:700 10px/1.4 var(--font-meta); }
+.nf-card-head .type { flex:none; padding:1px 6px; border:1px solid color-mix(in srgb,var(--type) 30%,transparent); border-radius:999px; color:var(--type); font:500 9.5px/1.5 var(--font-meta); }
+.nf-card-head .tt { min-width:0; overflow:hidden; color:var(--text); font-size:12.5px; font-weight:600; line-height:1.45; white-space:nowrap; text-overflow:ellipsis; }
+.nf-card-head .fold { flex:none; margin-left:auto; color:var(--text-3); font-size:10px; transition:transform var(--dur) var(--ease); }
+.nf-card.is-folded .nf-card-head .fold { transform:rotate(-90deg); }
+.nf-desc { display:none; padding:0 14px 11px 33px; color:var(--text-2); font-size:11.5px; line-height:1.7; }
+.nf-desc p { margin:0; }
+.nf-card:not(.is-folded) .nf-desc { display:block; }
+
+/* ---------- 页面控件 ---------- */
+.btn { display:inline-flex; align-items:center; min-height:34px; padding:7px 15px; border:1px solid var(--border-strong); border-radius:var(--r-xs); background:var(--surface); color:var(--text-2); font:500 13px/1.4 var(--font-sans); cursor:pointer; transition:all var(--dur) var(--ease); }
+.btn:hover { border-color:var(--text-3); color:var(--text); }
+.btn-primary { border-color:var(--acc); background:var(--acc); color:#fff; }
+.btn-primary:hover { background:var(--acc-hover); color:#fff; }
+.input { width:100%; min-height:38px; padding:8px 11px; border:1px solid var(--border-strong); border-radius:var(--r-xs); background:var(--surface); color:var(--text); font:400 13.5px/1.5 var(--font-sans); outline:none; transition:all var(--dur) var(--ease); }
+.input:focus { border-color:var(--acc); box-shadow:0 0 0 3px var(--acc-soft); }
+.input::placeholder { color:var(--text-3); }
+.toast { position:fixed; left:50%; bottom:26px; z-index:300; padding:10px 15px; border:1px solid var(--border-strong); border-radius:var(--r-xs); background:var(--surface); color:var(--text); box-shadow:var(--shadow-lg); font-size:12px; transform:translateX(-50%); }
+.toast[hidden] { display:none; }
+.toast.warn { border-color:var(--warn); color:var(--warn); }
+
+.top { padding-bottom:16px; border-bottom:1px solid var(--border); }
+.top h1 { margin:0; font:600 22px/1.3 var(--font-sans); }
+.top .sub { max-width:64ch; margin-top:7px; color:var(--text-2); font-size:13px; }
+.top-row { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+.eyebrow { display:inline-flex; align-items:center; gap:8px; font:500 10px/1.6 var(--font-meta); letter-spacing:.14em; text-transform:uppercase; color:var(--text-3); }
+.eyebrow::before { content:""; width:16px; height:1px; background:var(--annot); }
+.card { border:1px solid var(--border); border-radius:var(--r-sm); background:var(--surface); }
+.form-card { margin-top:20px; padding:20px; }
+.field { margin-bottom:16px; }
+.field > label { display:block; margin-bottom:7px; font:500 12px/1.5 var(--font-sans); color:var(--text-2); }
+.req { color:var(--bad); }
+.ta { min-height:96px; resize:vertical; }
+.cnt { margin-top:5px; text-align:right; color:var(--text-3); font:10.5px/1.5 var(--font-meta); }
+.cnt.over { color:var(--bad); }
+.frow { display:flex; align-items:center; gap:14px; margin-top:4px; }
+.anon { display:inline-flex; align-items:center; gap:8px; color:var(--text-2); font-size:13px; cursor:pointer; }
+.gtoggle { position:relative; width:38px; height:21px; border:1px solid var(--border-strong); border-radius:999px; background:var(--surface-3); cursor:pointer; transition:all var(--dur) var(--ease); }
+.gtoggle::after { content:""; position:absolute; top:2px; left:2px; width:15px; height:15px; border-radius:50%; background:#fff; box-shadow:0 1px 2px rgba(31,36,41,.2); transition:all var(--dur) var(--ease); }
+.gtoggle.on { background:var(--acc); border-color:var(--acc); }
+.gtoggle.on::after { transform:translateX(17px); }
+.list-card { margin-top:20px; padding:2px 14px; }
+.post { display:flex; gap:11px; padding:13px 2px; border-bottom:1px solid var(--border); align-items:flex-start; }
+.post:last-child { border-bottom:0; }
+.avatar { display:grid; place-items:center; width:30px; height:30px; flex:none; border-radius:50%; background:var(--acc-soft); color:var(--acc); font:600 12px/1 var(--font-sans); }
+.post-main { flex:1; min-width:0; }
+.post-meta { display:flex; gap:8px; align-items:baseline; }
+.post-meta b { color:var(--text); font-size:12.5px; }
+.post-meta span { color:var(--text-3); font:10px/1.6 var(--font-meta); }
+.post-main p { margin:4px 0 0; color:var(--text-2); font-size:13px; line-height:1.7; }
+.del { flex:none; padding:2px 8px; border:1px solid var(--border); border-radius:4px; background:transparent; color:var(--text-3); font:10px/1.6 var(--font-meta); cursor:pointer; }
+.del:hover { border-color:var(--bad); color:var(--bad); }
+.empty-box { margin-top:20px; padding:34px 0; text-align:center; border:1px dashed var(--border-strong); border-radius:var(--r-sm); color:var(--text-3); font-size:12.5px; }
+.acts { display:flex; align-items:center; gap:8px; }
+
+@media (max-width:860px) {
+  .topbar { padding:8px 12px; gap:10px; }
+  .reqbar { flex-wrap:wrap; padding:8px 12px; }
+  .reqbar .req-meta { display:none; }
+  .wrap { padding:16px 14px 130px; }
+  .notes-float { right:10px; bottom:10px; max-height:52vh; }
+}
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body data-initial-page="发布动态">
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">轻</div>
+    <div class="copy"><span class="en">LIGHT POST</span><b>社区轻发言</b></div>
+  </div>
+  <nav class="pnav" id="pageNav" aria-label="原型页面"></nav>
+</header>
+
+<div class="reqbar">
+  <span class="req-tag">变体 C</span>
+  <p><b>需求：</b>社区轻发言 —— 登录用户可发布 ≤140 字动态，支持匿名；列表按时间倒序，作者可删除自己的动态（二次确认）。直出版：无水滴无连线，说明收在右下角面板，点卡片头部展开 / 收起。</p>
+  <span class="req-meta">同一需求 · 三变体对比 · 数据为模拟</span>
+</div>
+
+<main class="wrap" id="stage">
+  <section class="page" data-page="发布动态" data-route="/post">
+    <div class="top">
+      <div class="eyebrow">COMMUNITY · 轻发言</div>
+      <h1>发布动态</h1>
+      <p class="sub">登录用户可发布 140 字内的动态，支持匿名展示。</p>
+    </div>
+    <div class="card form-card">
+      <div class="field">
+        <label>标题 <span class="req">*</span></label>
+        <input class="input" id="titleInput" placeholder="一句话概括这条动态">
+      </div>
+      <div class="field">
+        <label>内容</label>
+        <textarea class="input ta" id="bodyInput" maxlength="140" placeholder="今天有什么想说的？（≤140 字）"></textarea>
+        <div class="cnt"><span id="cnt">0</span>/140</div>
+      </div>
+      <div class="frow">
+        <label class="anon"><span class="gtoggle on" id="anonSwitch" role="switch" aria-checked="true" tabindex="0"></span> 匿名发布</label>
+        <button class="btn btn-primary" type="button" id="btnPublish">发布</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" data-page="动态列表" data-route="/timeline" hidden>
+    <div class="top-row">
+      <div class="top" style="flex:1">
+        <div class="eyebrow">COMMUNITY · TIMELINE</div>
+        <h1>动态列表</h1>
+        <p class="sub">按发布时间倒序；仅作者可见删除入口。</p>
+      </div>
+      <div class="acts"><button class="btn btn-primary" type="button" id="btnGo">＋ 发布动态</button></div>
+    </div>
+    <div class="card list-card" id="postList">
+      <div class="post">
+        <span class="avatar">匿</span>
+        <div class="post-main"><div class="post-meta"><b>匿名</b><span>10-22 10:24</span></div><p>把每周需求评审的结论都沉淀到原型里，回溯起来方便多了。</p></div>
+        <button class="del" type="button">删除</button>
+      </div>
+      <div class="post">
+        <span class="avatar">w</span>
+        <div class="post-main"><div class="post-meta"><b>wikky</b><span>10-21 18:03</span></div><p>轻发言的关键是「轻」：不强制标题，字数一到就停。</p></div>
+        <button class="del" type="button">删除</button>
+      </div>
+      <div class="post">
+        <span class="avatar">棠</span>
+        <div class="post-main"><div class="post-meta"><b>阿棠</b><span>10-21 09:12</span></div><p>匿名发言的标签样式和实名区分开，扫一眼就能认出来。</p></div>
+      </div>
+    </div>
+    <div class="empty-box" id="emptyBox" hidden>暂无动态 —— 点击「发布动态」说点什么</div>
+  </section>
+</main>
+
+<aside class="notes-float" id="notesFloat">
+  <div class="nf-head" id="nfHead" role="button" tabindex="0" aria-expanded="true" aria-label="收起或展开需求说明面板">
+    <span class="nf-title">需求说明 · <b id="nfPage">发布动态</b></span>
+    <span class="nf-meta"><span id="nfCount">3</span> 条 · 同一需求 · 变体 C</span>
+    <span class="fold">▾</span>
+  </div>
+  <div class="nf-actions">
+    <span class="hint">点卡片头部展开 / 收起</span>
+    <button type="button" id="nfToggleAll">全部收起</button>
+  </div>
+  <div class="nf-body" id="nfBody"></div>
+</aside>
+
+<script>
+window.PD_ANNOTATIONS = [
+  { id: "f-title", page: "发布动态", type: "field", title: "标题必填", body: "标题为必填项；缺失时 Toast 提示并聚焦输入框，不清空已填内容。" },
+  { id: "f-anon", page: "发布动态", type: "interact", title: "匿名开关", body: "开启后列表展示「匿名」；后端仍记录作者，作者本人可删除自己的匿名动态。" },
+  { id: "f-submit", page: "发布动态", type: "interact", title: "发布提交", body: "内容 140 字实时计数、超限禁用按钮；发布成功插入列表顶部并 Toast，随后切到动态列表。" },
+  { id: "b-list", page: "动态列表", type: "feature", title: "按时间倒序", body: "动态按发布时间倒序展示，新发布的动态插入最上方。" },
+  { id: "b-del", page: "动态列表", type: "warning", title: "删除二次确认", body: "仅作者可见删除入口；点击后二次确认，确认后移除并 Toast，不可恢复。" },
+  { id: "b-empty", page: "动态列表", type: "field", title: "空状态", body: "无动态时展示空状态与发布入口，不留空白列表。" }
+];
+</script>
+
+<script>
+  (function () {
+    "use strict";
+    var $ = function (id) { return document.getElementById(id); };
+    var stage = document.getElementById("stage");
+    var pageNav = document.getElementById("pageNav");
+    var notesFloat = document.getElementById("notesFloat");
+    var nfBody = document.getElementById("nfBody");
+    var pages = [...stage.querySelectorAll(":scope > .page[data-page]")];
+    var annotations = window.PD_ANNOTATIONS || [];
+    var current = pages.length ? pages[0].dataset.page : "";
+    var TYPE_LABEL = { feature: "功能", field: "字段", interact: "交互", warning: "注意" };
+
+    function pageByName(name) { return pages.find(function (p) { return p.dataset.page === name; }); }
+    function pageAnnotations(name) { return annotations.filter(function (a) { return a.page === name; }); }
+
+    function buildNav() {
+      pageNav.innerHTML = pages.map(function (page, index) {
+        var count = pageAnnotations(page.dataset.page).length;
+        return '<button type="button" data-target="' + page.dataset.page + '"><span class="no">' + String(index + 1).padStart(2, "0") + '</span>' + page.dataset.page + ' <span style="opacity:.6;font:9.5px/1.5 var(--font-meta)">' + count + '</span></button>';
+      }).join("");
+    }
+    function syncNav() {
+      pageNav.querySelectorAll("button").forEach(function (b) {
+        var on = b.dataset.target === current;
+        b.classList.toggle("on", on);
+        b.setAttribute("aria-current", on ? "page" : "false");
+      });
+    }
+    pageNav.addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-target]");
+      if (b) showPage(b.dataset.target);
+    });
+
+    function buildCards() {
+      var list = pageAnnotations(current);
+      nfBody.innerHTML = list.map(function (a, index) {
+        var typeLabel = TYPE_LABEL[a.type] || "说明";
+        return '<article class="nf-card type-' + a.type + '" data-annotation-id="' + a.id + '">' +
+          '<div class="nf-card-head" role="button" tabindex="0" aria-expanded="true">' +
+            '<span class="no">' + String(index + 1).padStart(2, "0") + '</span><span class="type">' + typeLabel + '</span>' +
+            '<span class="tt">' + a.title + '</span><span class="fold">▾</span>' +
+          '</div><div class="nf-desc"><p>' + a.body + '</p></div></article>';
+      }).join("");
+      $("nfToggleAll").textContent = "全部收起";
+      $("nfPage").textContent = current;
+      $("nfCount").textContent = list.length;
+    }
+    /* 卡片头部展开/收起：nfBody 上事件委托，切页重建 DOM 无需重绑 */
+    function toggleCard(head) {
+      var folded = head.parentElement.classList.toggle("is-folded");
+      head.setAttribute("aria-expanded", folded ? "false" : "true");
+      var cards = [...nfBody.querySelectorAll(".nf-card")];
+      if (cards.length) {
+        var allFolded = cards.every(function (c) { return c.classList.contains("is-folded"); });
+        $("nfToggleAll").textContent = allFolded ? "全部展开" : "全部收起";
+      }
+    }
+    nfBody.addEventListener("click", function (e) {
+      var head = e.target.closest(".nf-card-head");
+      if (head) toggleCard(head);
+    });
+    nfBody.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      var head = e.target.closest(".nf-card-head");
+      if (head) { e.preventDefault(); toggleCard(head); }
+    });
+
+    function showPage(name) {
+      var target = pageByName(name) || pages[0];
+      pages.forEach(function (p) { p.hidden = p !== target; p.classList.toggle("is-active", p === target); });
+      current = target.dataset.page;
+      syncNav(); buildCards();
+      window.scrollTo({ top: 0 });
+    }
+
+    var nfHead = $("nfHead");
+    function togglePanel() {
+      var collapsed = notesFloat.classList.toggle("collapsed");
+      nfHead.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    }
+    nfHead.addEventListener("click", togglePanel);
+    nfHead.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); togglePanel(); }
+    });
+    $("nfToggleAll").addEventListener("click", function (e) {
+      e.stopPropagation();
+      var fold = this.textContent === "全部收起";
+      nfBody.querySelectorAll(".nf-card").forEach(function (card) {
+        card.classList.toggle("is-folded", fold);
+        card.querySelector(".nf-card-head").setAttribute("aria-expanded", fold ? "false" : "true");
+      });
+      this.textContent = fold ? "全部展开" : "全部收起";
+    });
+
+    window.PD = { showPage: showPage, current: function () { return current; } };
+    buildNav();
+    showPage(document.body.getAttribute("data-initial-page") || current);
+  })();
+</script>
+<script>
+  (function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var toastEl = null, toastTimer = null;
+    function toast(msg, warn) {
+      if (!toastEl) { toastEl = document.createElement("div"); toastEl.className = "toast"; document.body.appendChild(toastEl); }
+      toastEl.classList.toggle("warn", !!warn);
+      toastEl.textContent = msg;
+      toastEl.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { toastEl.hidden = true; }, 3600);
+    }
+    var anonOn = true;
+    $("anonSwitch").addEventListener("click", function () {
+      anonOn = !anonOn;
+      this.classList.toggle("on", anonOn);
+      this.setAttribute("aria-checked", anonOn ? "true" : "false");
+    });
+    $("bodyInput").addEventListener("input", function () {
+      var n = this.value.length;
+      $("cnt").textContent = n;
+      this.parentNode.querySelector(".cnt").classList.toggle("over", n >= 140);
+      $("btnPublish").disabled = n > 140;
+    });
+    $("btnPublish").addEventListener("click", function () {
+      var title = $("titleInput"), body = $("bodyInput");
+      if (!title.value.trim()) { toast("标题必填", true); title.focus(); return; }
+      var div = document.createElement("div");
+      div.className = "post";
+      div.innerHTML = '<span class="avatar">' + (anonOn ? "匿" : "w") + '</span>' +
+        '<div class="post-main"><div class="post-meta"><b>' + (anonOn ? "匿名" : "wikky") + '</b><span>刚刚</span></div><p></p></div>' +
+        '<button class="del" type="button">删除</button>';
+      div.querySelector("p").textContent = title.value + " —— " + body.value;
+      $("postList").prepend(div);
+      checkEmpty();
+      title.value = ""; body.value = ""; $("cnt").textContent = "0";
+      toast("已发布" + (anonOn ? "（匿名）" : ""));
+      if (window.PD) window.PD.showPage("动态列表");
+    });
+    /* 删除按钮：postList 上事件委托，新增动态无需重绑 */
+    $("postList").addEventListener("click", function (e) {
+      var btn = e.target.closest(".del");
+      if (!btn) return;
+      if (confirm("确认删除这条动态？删除后不可恢复。")) {
+        btn.closest(".post").remove();
+        toast("已删除");
+        checkEmpty();
+      }
+    });
+    function checkEmpty() {
+      var has = $("postList").querySelector(".post");
+      $("emptyBox").hidden = !!has;
+    }
+    $("btnGo").addEventListener("click", function () { if (window.PD) window.PD.showPage("发布动态"); });
+    checkEmpty();
+  })();
+</script>
+</body>
+</html>

@@ -2,7 +2,13 @@
 
 页面设计 Skill，支持 Codex 和 Claude Code。pen.dev 链路用 CLI Agent 快速出图、MCP `execute` 精细控制；Axure 链路经 zee-rp 的 CLI/MCP 生成可继续在 Axure RP 中编辑的原生 `.rp`；Figma 链路经 Remote MCP 读写云端设计；配置文件管理组件库。
 
-> **重要**：Pencil 已正式更名为 **pen.dev**。命令 `pencil` → `pen`，npm 包 `@pencil.dev/cli` → `@pen.dev/cli`，环境变量 `PENCIL_*` → `PEN_*`。本 Skill v5.1.0 已对齐 pen.dev CLI 0.3.12、Pen.app 1.2.5+、zee-rp 0.2.0 与 Figma Remote MCP，并新增模式 4（Figma）。zee-rp 是独立实验性项目，不是 Axure 官方产品。
+> **重要**：Pencil 已正式更名为 **pen.dev**。命令 `pencil` → `pen`，npm 包 `@pencil.dev/cli` → `@pen.dev/cli`，环境变量 `PENCIL_*` → `PEN_*`。本 Skill v5.4.0 已对齐 pen.dev CLI 0.3.12、Pen.app 1.2.5+、zee-rp 0.2.0、Figma Remote MCP 与墨刀生成型 MCP；HTML 原型外壳分 A / B / C 三种变体（首次询问 + 项目级记忆），视觉由项目令牌区按项目规范注入；Axure 子技能前置 zee-rp 第三方工具风险告知。zee-rp 是独立实验性项目，不是 Axure 官方产品。
+
+## 🗺️ Skill 全流程
+
+[![prototype-designer skill flow](assets/skill-flow.png)](assets/skill-flow.html)
+
+> 上游 `requirement-analysis`（PRD + output）→ 前置检查 → 产出形式 → 外壳变体 A/B/C + 项目令牌 → 五种模式（Pen / 仅 HTML / Axure / Figma / 墨刀）→ 组件库 + Context → §9 组装 → 自检 → 交付评审 → 归档 → 下游 `prototype-to-frontend`。点击图片查看可交互 HTML 版（[assets/skill-flow.html](assets/skill-flow.html)）。
 
 ## 简介
 
@@ -61,16 +67,19 @@
 - ✅ 命名规范驱动：通过统一命名规范管理组件
 - ✅ 批量处理：支持批量生成多个设计文件
 - ✅ 导出能力：导出为 PNG/JPEG/WEBP/PDF，以及 HTML（html-tailwind / html-css）
-- ✅ 可交互原型生成：从 .pen 生成单文件 HTML，严格实现 context 交互，多页面左导航 + 右功能说明
+- ✅ 可交互原型生成：从 .pen / HTML / Axure / Figma 生成单文件 HTML，严格实现 context 交互；外壳按变体 A 顶部导航 / B 三栏标注评审 / C 直出组装
 - ✅ 结构化交付契约：原型内嵌 `prototype-manifest`，页面/路由/交互/组件可被下游直接解析
+- ✅ HTML 原型外壳变体：首次询问 A / B / C 并在 `.prototype-designer.json` 记住 `shellVariant`，后续默认沿用直到明确更换；换外壳仅重组装评审壳
+- ✅ 项目令牌区：配色 / 字体 / 圆角由项目前端与 UI 规范注入（中性默认兜底），无明暗切换，外壳不绑定视觉预设
 - ✅ 仅 HTML 模式：不生成 .pen、跳过 pen 环境校验，直接产出单文件可交互 HTML
 - ✅ Axure 模式：经 zee-rp CLI/MCP 生成/修改原生 `.rp`，支持 RP/1 源码、截图转布局、交互/面板/中继器/母版
 - ✅ Axure 安全编辑：先读后改、工作副本链、输出新文件、结构三零校验
 - ✅ Axure 证据分层：结构、GUI 往返、实际预览分别记录
 - ✅ Figma 模式：经 Remote MCP 读取/创建云端设计，支持变量、组件库、截图与只读降级
+- ✅ 墨刀模式：经官方生成型 MCP 异步产出单文件 HTML（query 翻译 → generate_html → continue_task 迭代），产物交公共核心组外壳
 - ✅ Figma 安全写入：`whoami()` 席位探测、`figma-use` 前置、`file_key` 管理、写前确认
 - ✅ HTML 组件库：无 .pen 时以 `component-library.html` + `components.json` 管理可复用组件
-- ✅ 原型增强特性：水滴标注系统（标注点+连接线+开关）、拖拽分割线、说明面板字体调整
+- ✅ 原型增强特性（变体 B）：销钉形扁平水滴标注 + 连线（开关仅右栏右上角）、类型筛选、双向定位、可拖拽；变体 C 右下角说明面板卡片头部展开 / 收起
 - ✅ 网页转设计：MCP `browser` 工具把真实网页/元素复现为可编辑画布图层
 - ✅ AI 图片与 SVG 生成：`Generate` 生成 AI 图、Unsplash 图库、矢量插画
 
@@ -98,12 +107,13 @@
 
 0. **前置检查**：依次检查 `PRD.md` → 标准控件库 → 设计规范（`design.md` / `tokens.json` / `variables.css` / `UI Design.pen|rp|html` / Figma 文件），检测到已有资产时设计阶段强制复用与遵循；缺失时询问用户，未提供则记录，待产出形式选定后建默认并标注「默认值待确认」
 1. **产出形态选择**：检查完成后先询问「原生设计文件 + 可交互 HTML」还是「仅可交互 HTML」；选原生后再询问 Pen / Axure / Figma（OpenDesign planned，当前禁用），未选择不得开始
-2. **环境校验**：模式 1 检查 pen.dev CLI 是否已安装并认证；模式 2 跳过；模式 3 检查 zee-rp、Python 与 Axure 空白模板；模式 4 检查 Figma MCP 与席位
-3. **页面设计**：模式 1 CLI Agent 优先、按需切 MCP `execute`；模式 2 直接编写 HTML 页面片段；模式 3 编写 RP/1 源码并用 `proto.mjs check/generate`，已有 `.rp` 用原生 writer / MCP 会话链；模式 4 先读后写，写前加载 `figma-use`
-4. **组件查找**：模式 1 用 `Get(n => n.reusable)`；模式 2 查 `component-library.html` 的 `<template>`；模式 3 查 `masters` / `.rplib`；模式 4 用 `get_libraries` / `search_design_system`
-5. **组件提取**：识别可复用组件（模式 2 提取 HTML 片段，模式 4 优先实例化已发布组件）
-6. **组件库更新 + 配置更新**：更新控件库.pen、`component-library.html`、Axure 母版或 Figma 组件，并同步 components.json
-7. **可交互原型生成**：模式 1 可选、从 .pen 生成；模式 2 默认执行、从 HTML 片段组装；模式 3 主交付 `.rp`，可选从 RP/1 源码或 `.rp` 生成；模式 4 主交付 Figma 文件，可选生成 `design-prototype.html`（均内嵌 `prototype-manifest` 供下游解析）
+2. **外壳变体选择**：生成 HTML 时读取 `.prototype-designer.json` 的 `shellVariant`；首次在 A 顶部导航 / B 三栏标注评审 / C 直出 中确认（推荐项在前），之后默认沿用直到用户明确更换；视觉由项目令牌区注入，不再询问视觉预设
+3. **环境校验**：模式 1 检查 pen.dev CLI 是否已安装并认证；模式 2 跳过；模式 3 检查 zee-rp、Python 与 Axure 空白模板；模式 4 检查 Figma MCP 与席位
+4. **页面设计**：模式 1 CLI Agent 优先、按需切 MCP `execute`；模式 2 直接编写 HTML 页面片段；模式 3 编写 RP/1 源码并用 `proto.mjs check/generate`，已有 `.rp` 用原生 writer / MCP 会话链；模式 4 先读后写，写前加载 `figma-use`
+5. **组件查找**：模式 1 用 `Get(n => n.reusable)`；模式 2 查 `component-library.html` 的 `<template>`；模式 3 查 `masters` / `.rplib`；模式 4 用 `get_libraries` / `search_design_system`
+6. **组件提取**：识别可复用组件（模式 2 提取 HTML 片段，模式 4 优先实例化已发布组件）
+7. **组件库更新 + 配置更新**：更新控件库.pen、`component-library.html`、Axure 母版或 Figma 组件，并同步 components.json
+8. **可交互原型生成**：模式 1 可选、从 .pen 生成；模式 2 默认执行、从 HTML 片段组装；模式 3 主交付 `.rp`，可选从 RP/1 源码或 `.rp` 生成；模式 4 主交付 Figma 文件，可选生成 `design-prototype.html`（均内嵌 `prototype-manifest` 供下游解析）
 
 ### 四种载体（适配器）
 
@@ -170,6 +180,22 @@ get_screenshot({ file_key, node_id })
 
 先 `whoami()` 判断席位：Full / Dev 可写，View / Collab 自动只读降级；写前加载 `figma-use`。已有文件从 URL 解析 `file_key`，新文件用 `create_new_file`。`get_design_context` 默认 React + Tailwind 仅作结构参考；`get_screenshot` 只证明视觉。完整说明见 [adapters/figma/SKILL.md](adapters/figma/SKILL.md) 与 [figma-mcp.md](adapters/figma/references/figma-mcp.md)。
 
+## 原型样式
+
+生成 `design-prototype.html` 时按 `.prototype-designer.json` 的 `prototypeStyle` 选择：
+
+| 样式 | 评审外壳 | 视觉 |
+|---|---|---|
+| `project` | 左导航 / 中预览 / 右说明三栏 | 沿用项目 `design.md` / `tokens.json` / `variables.css` / `UI Design.html` |
+| `B` 三栏标注评审版 | 左导航 / 中舞台 / 右说明面板；销钉水滴 + 连线（开关仅右栏右上角）、类型筛选 | 逐节点评审已确认决策 |
+| `C` 直出版 | 头部页面菜单 + 页面直出 + 右下角说明面板（卡片头部展开/收起） | 演示与走查 |
+| `A` 顶部导航版 | 顶部页面切换 + 页面级备注（看全部备注展开） | 页面少、说明按页讲 |
+
+- 首次生成 HTML 时询问一次，确认后写入项目根 `.prototype-designer.json`
+- 后续默认沿用，不再重复询问；用户说「换样式」时才重新确认
+- 外壳规则（首次询问 / 记忆 / 更换）、项目令牌区与自检清单见 [prototype-styles.md](references/prototype-styles.md)
+- 预览：[shell-a-topnav.html](assets/prototypes/shell-a-topnav.html)｜[shell-b-three-column.html](assets/prototypes/shell-b-three-column.html)｜[shell-c-direct.html](assets/prototypes/shell-c-direct.html)（遗留 editorial-ink：[style-editorial-ink.html](assets/prototypes/style-editorial-ink.html)）
+
 ## 组件命名规范
 
 所有可复用组件遵循统一的命名规范，格式为：`{前缀}-{功能描述}`
@@ -202,11 +228,33 @@ Agent 会根据以下标准自动判断一个元素是否应该成为可复用�
 
 ## 版本
 
-- 版本号: 5.1.0
+- 版本号: 5.4.0
 - 创建日期: 2026-03-31
 - 更新日期: 2026-10-22
 
 ## 更新日志
+
+### v5.4.0 (2026-10-23)
+
+- 🆕 新增模式 5（墨刀 Modao）：官方生成型 MCP 适配器 `adapters/modao/`
+- 🔁 意图翻译 query → `generate_html` 异步生成 → `get_task_result` 轮询 → `continue_task` 迭代（禁止重开新任务）
+- 📦 产物交公共核心按 `shellVariant` 组装；manifest 新增 mode `modao`
+- 🔒 权益 / 配额降级与回退规则齐备（quota 用尽回退 pen.dev / 仅 HTML，经用户确认）
+
+### v5.3.0 (2026-10-23)
+
+- 🧩 HTML 原型外壳与视觉解耦：新增外壳变体 **A 顶部导航 / B 三栏标注评审 / C 直出**
+- 📌 首次生成询问 `shellVariant` 并写入 `.prototype-designer.json`，后续默认沿用直到明确更换
+- 🎨 项目令牌区：配色 / 字体按项目前端与 UI 规范注入（中性默认兜底），移除明暗切换；editorial-ink 降级为遗留资产
+- ⚠️ Axure 子技能新增 zee-rp 第三方工具风险告知前置闸口；接管 GUI 前通知用户明确画入执行顺序
+- 📦 prototype-manifest 新增 `shell` 字段；新增三个外壳预览资产
+
+### v5.2.0 (2026-10-22)
+- ✨ 新增 HTML 原型视觉样式：首次询问并在 `.prototype-designer.json` 记住选择
+- 🎨 新增「纸墨编辑风 editorial-ink」：暖黑 / 米白双主题、宋体标题、等宽标签
+- 🧭 新增顶部页面切换 + 居中舞台 + `看全部备注` 的编辑式评审外壳
+- 🧩 新增样式预览与 `editorial-ink.css` 令牌实现
+- 🔄 原型 `#prototype-manifest` 增加 `style` 字段
 
 ### v5.1.0 (2026-10-22)
 - ✨ 新增模式 4（Figma）：经 Remote MCP 读取/创建云端设计，支持变量、组件库与截图

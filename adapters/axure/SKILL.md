@@ -55,16 +55,17 @@ node adapters/axure/scripts/axure-preflight.mjs
 
 ## 4. 执行顺序
 
-1. 读取 `DesignRequest`，确认 Axure 版本、目标文件与是否要 HTML。
-2. 运行 `scripts/axure-preflight.mjs`，检查 Node、Python、zee-rp、venv、模板与 Axure。
-3. 选择路径：
+1. **第三方工具风险告知（必须最先执行）**：明确告知用户——zee-rp 是独立实验性项目，**不是 Axure 官方产品**；本适配器的 .rp 读写依赖其 RP/1 中间格式与脚本链，可能存在格式兼容、生成保真度与后续版本演进风险；验收按「结构 → 原生打开 → 原生预览 → GUI 往返」分层记录，结构通过不代表 Axure 原生预览通过。用户接受 → 继续；拒绝 → 回退「仅 HTML」或停止，不得静默改用 Pen。该告知在每个项目的首次进入时必须执行，用户已确认过的项目可在交付说明中注明「已确认 zee-rp 风险」。
+2. 读取 `DesignRequest`，确认 Axure 版本、目标文件与是否要 HTML。
+3. 运行 `scripts/axure-preflight.mjs`，检查 Node、Python、zee-rp、venv、模板与 Axure。
+4. 选择路径：
    - 新建：写 RP/1（`check` → `generate`），默认 RP9。
    - 已有 `.rp`：先 `rp-read`，再用 writer 或 MCP 会话链修改，输出新文件。
    - 截图/网页：先转布局，再进入上述路径。
-4. 生成后做结构校验（`rp-read` / `verify` / 结构三零）。
-5. 需要原生验收时，在 Axure 中打开**验证副本**，执行 `Publish → Preview` 并记录实际交互。
-6. 需要 HTML 时，把 `pages` / `interactions` 交给公共核心生成，不在本适配器内拼三栏页面。
-7. 返回 `DesignResult`，分层记录证据与限制。
+5. 生成后做结构校验（`rp-read` / `verify` / 结构三零）。
+6. 需要原生验收时，**先按 §0.6 通知用户**（Axure 版本、验证副本文件、将执行的打开 / 点击 / 输入 / 保存 / 关闭动作）并取得确认，再在 Axure 中打开**验证副本**，执行 `Publish → Preview` 并记录实际交互；用户拒绝 → 跳过原生验收，在 `limitations` 记录「Axure 预览待验收」。
+7. 需要 HTML 时，把 `pages` / `interactions` 交给公共核心生成，不在本适配器内拼三栏页面。
+8. 返回 `DesignResult`，分层记录证据与限制。
 
 ## 5. 验收层级
 
@@ -96,6 +97,7 @@ node adapters/axure/scripts/axure-preflight.mjs
 
 ## 8. 边界
 
+- 进入子技能先完成第 4 节第 1 步的第三方工具风险告知（zee-rp 非官方）；未告知不得开始生成。
 - 接管 GUI 前必须告知版本、文件、动作（点击/输入/保存/关闭）并取得确认。
 - 不操作用户已打开的工程；不覆盖原稿；不删除用户文件。
 - 不把结构校验、截图对比或本地预览说成 Axure 原生验收。
