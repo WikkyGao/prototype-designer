@@ -118,6 +118,8 @@ prototype-designer/
 | `htmlPolicy` | `required` / `optional` / `unsupported` | 是否必须、可选或不能产出 HTML |
 | `requires` | 字符串数组 | 运行前置条件，供 preflight 展示 |
 | `preflight` | 相对路径或 `null` | 从适配器目录解析；未实现时可暂为 `null` |
+| `executionModes` | 字符串数组，可选 | 执行模式，如 Axure 的 `cli` / `gui-acceptance`；未声明视为单一默认模式 |
+| `defaultExecutionMode` | 字符串，可选 | 默认执行模式，必须是 `executionModes` 的一项 |
 | `capabilities` | 布尔对象 | 创建、读取、修改、验证 |
 | `acceptance` | 字符串数组 | `structural` / `native-open` / `preview` / `gui-roundtrip` |
 

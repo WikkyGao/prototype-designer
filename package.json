@@ -1,7 +1,7 @@
 {
   "name": "prototype-designer",
   "displayName": "页面设计技能（pen.dev / Axure / Figma；OpenDesign planned）",
-  "version": "5.4.0",
+  "version": "5.5.0",
   "description": "页面设计编排 Skill：先检查 PRD、标准控件库与设计规范，再确认产出形态（原生设计文件 + HTML 或仅 HTML）；原生工具由本 Skill 询问 Pen / Axure / Figma（OpenDesign planned）。采用编排层 + 适配器架构，HTML 原型外壳分 A 顶部导航 / B 三栏标注评审 / C 直出三种变体，首次询问并记住选择；配色与字体由项目令牌区按项目前端/UI 规范注入，不绑定视觉预设；Axure 子技能前置第三方工具风险告知；墨刀（Modao）官方生成型 MCP 适配器异步产出单文件 HTML（continue_task 迭代）；原型内嵌 prototype-manifest，页面/交互可被原型转前端直接解析",
   "description_en": "Page design skill for pen.dev, Axure, Figma and Modao (MockingBot) — CLI-first for speed, MCP execute for fine-grained control, browser for web-to-design, zee-rp for native Axure .rp (third-party tool risk disclosed up front), Figma Remote MCP for cloud files, Modao generative MCP for async single-file HTML; HTML prototype shells come in three variants (A top-nav / B three-column annotate / C direct) with first-run confirmation and project-level memory, all visuals driven by project tokens",
   "author": "WikkyGao",
@@ -30,7 +30,8 @@
   },
   "scripts": {
     "test": "echo \"No npm tests; see @pen.dev/cli for runtime\" && exit 0",
-    "preflight:axure": "node adapters/axure/scripts/axure-preflight.mjs"
+    "preflight:axure": "node adapters/axure/scripts/axure-preflight.mjs --mode cli",
+    "preflight:axure:gui": "node adapters/axure/scripts/axure-preflight.mjs --mode gui"
   },
   "dependencies": {},
   "atomcode": {
@@ -76,6 +77,18 @@
     "墨刀（Modao）适配器：官方生成型 MCP，query 翻译 → generate_html 异步生成 → continue_task 迭代"
   ],
   "changelog": [
+    {
+      "version": "5.5.0",
+      "date": "2026-10-23",
+      "changes": [
+        "Axure 适配器新增执行模式：默认 cli（纯文件，不启动 Axure、不发 System Events/CGEvent、不写剪贴板、不抢焦点）；gui-acceptance 需逐项目显式授权",
+        "cli 模式固定验收口径：structural 通过，native-open/preview/gui-roundtrip 记 not_run；不得把结构验证说成 Axure 已验证",
+        "新增 version-matrix.md：RP9/RP11 文件头、模板、动作字段、DOA、FCall、事件差异与 version-lint 门禁",
+        "preflight 支持 --mode cli|gui：CLI 模式不要求本机安装 Axure，并输出无 GUI 流水线",
+        "生成/修改后追加 version-lint --version 9|11，补齐三零查不出的版本专属键违规",
+        "明确 RP/1 只能生成 RP9；RP11 CLI 路径仅覆盖空白工程 + writer/clone-library，整页需 GUI axvg paste --version 11 或 RP9 副本另存升级"
+      ]
+    },
     {
       "version": "5.4.0",
       "date": "2026-10-23",
