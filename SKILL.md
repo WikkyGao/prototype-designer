@@ -4,7 +4,7 @@ slug: prototype-designer
 displayName: prototype-designer
 
 version: 5.3.0
-description: 页面设计 Skill，支持 pen.dev（原 Pencil）、Axure 与 Figma。可创建/修改 .pen、管理组件库、生成可交互 HTML 原型；也可经 zee-rp 的 CLI/MCP 生成和修改可在 Axure RP 中继续编辑的原生 .rp；或通过 Figma Remote MCP 读取/创建云端设计（写操作需 Full/Dev 席位，只读席位自动降级）。进入设计前先检查 PRD.md、标准控件库与设计规范（design.md、tokens.json、variables.css、UI Design.pen/rp/html 或 Figma 文件），已有资产强制复用，缺失则询问或建默认并标注「默认值待确认」。随后确认产出形态：「原生设计文件 + 可交互 HTML」或「仅 HTML」；选择原生后再由本 Skill 询问 Pen / Axure / Figma / 墨刀 Modao（OpenDesign planned，当前禁用）。（仅 HTML 跳过原生工具环境校验，但保留 PRD/控件库/设计规范/组件库流程）。生成 HTML 原型时首次询问外壳变体（A 顶部导航 / B 三栏标注评审 / C 直出）并记住选择，后续默认沿用直到用户明确更换；配色与字体由项目令牌区按项目前端/UI 规范注入，不绑定视觉预设。Axure 子技能进入前先告知 zee-rp 第三方工具风险，接管 GUI 前通知用户；墨刀子技能经官方生成型 MCP 异步产出单文件 HTML（continue_task 迭代）。CLI Agent 快速出图，MCP execute 精细控制，browser 网页转设计。用户提到 Pencil/pen.dev、生成 .pen、Figma、Figma MCP、墨刀、MockingBot、modao、页面/UI 设计、组件库、网页转设计、HTML 原型、Axure、.rp、RP/1 或 zee-rp 时应使用此 skill。
+description: 页面设计 Skill，支持 pen.dev（原 Pencil）、Axure 与 Figma。可创建/修改 .pen、管理组件库、生成可交互 HTML 原型；也可经 zee-rp 的 CLI/MCP 生成和修改可在 Axure RP 中继续编辑的原生 .rp；或通过 Figma Remote MCP 读取/创建云端设计（写操作需 Full/Dev 席位，只读席位自动降级）。进入设计前先检查 PRD.md、标准控件库与设计规范（design.md、tokens.json、variables.css、UI Design.pen/rp/html 或 Figma 文件），已有资产强制复用，缺失则询问或建默认并标注「默认值待确认」。随后确认产出形态：「原生设计文件 + 可交互 HTML」或「仅 HTML」；选择原生后再由本 Skill 询问 Pen / Axure / Figma / 墨刀 Modao（OpenDesign planned，当前禁用）。（仅 HTML 跳过原生工具环境校验，但保留 PRD/控件库/设计规范/组件库流程）。生成 HTML 原型时首次询问外壳变体（A 顶部导航 / B 三栏标注评审 / C 直出）并记住选择，后续默认沿用直到用户明确更换；配色与字体由项目令牌区按项目前端/UI 规范注入，不绑定视觉预设。Axure 子技能进入前先告知 zee-rp 第三方工具风险，默认 CLI 模式不接管鼠标/键盘，原生验收需逐项目开启 gui-acceptance；墨刀子技能经官方生成型 MCP 异步产出单文件 HTML（continue_task 迭代）。CLI Agent 快速出图，MCP execute 精细控制，browser 网页转设计。用户提到 Pencil/pen.dev、生成 .pen、Figma、Figma MCP、墨刀、MockingBot、modao、页面/UI 设计、组件库、网页转设计、HTML 原型、Axure、.rp、RP/1 或 zee-rp 时应使用此 skill。
 author: AI Agent Team
 created: 2026-03-31
 updated: 2026-10-22
@@ -229,7 +229,7 @@ T8 不传 `adapter`；由本 Skill 在原生工具步骤中询问并填入。Fig
 |---|---|
 | 安装/升级全局依赖 | 命令、版本、影响范围；优先项目内 venv |
 | 覆盖已有文件 | 原路径、备份或新文件名；默认不覆盖 |
-| 接管 GUI | 应用与版本、目标文件、会执行的点击/输入/保存/关闭 |
+| 接管 GUI（仅 Axure `gui-acceptance`） | 应用与版本、目标文件、会执行的点击/输入/保存/关闭；`cli` 模式不触发 |
 | 删除/移动资产 | 文件、引用次数、可恢复方式 |
 | 最终交付 | 输出文件、目标版本、验证层级、已知限制 |
 
@@ -430,9 +430,11 @@ get_screenshot({ file_key, node_id })
 
 ## 5.5 模式 3：Axure 页面设计（RP/1 + zee-rp）
 
-模式 3 不使用 pen.dev。RP/1 是唯一事实来源，zee-rp 编译为原生 `.rp`；已有 `.rp` 先读后改，输出新文件。执行顺序与验收标准由 [adapters/axure/SKILL.md](adapters/axure/SKILL.md) 定义，完整 RP/1 骨架、命令、多版本与 GUI 边界见 [axure-mode.md](adapters/axure/references/axure-mode.md)。
+模式 3 不使用 pen.dev。RP/1 是唯一事实来源，zee-rp 编译为原生 `.rp`；已有 `.rp` 先读后改，输出新文件。执行顺序与验收标准由 [adapters/axure/SKILL.md](adapters/axure/SKILL.md) 定义，完整 RP/1 骨架、命令、多版本与 CLI/GUI 边界见 [axure-mode.md](adapters/axure/references/axure-mode.md)。
 
-**必须记住**：`check` 未过不得 `generate`；结构三零不等于预览通过；Axure 11 只开验证副本；未完成 GUI 验收时标注「结构已验证，Axure 预览待验收」。
+**默认 CLI 模式**：生成、读取、修改、结构校验全部走文件命令，不启动 Axure、不发 System Events / CGEvent、不写剪贴板、不抢焦点。只有用户逐项目明确要求原生验收时，才进入 `gui-acceptance` 模式。
+
+**必须记住**：`check` 未过不得 `generate`；结构三零不等于预览通过；生成/修改后追加 `version-lint --version 9|11`；RP/1 只能产出 RP9，RP11 走模板 + `--version 11` 或升级副本；Axure 11 只开验证副本；未完成原生验收时标注「结构已验证，Axure 预览待验收」。版本差异见 [version-matrix.md](adapters/axure/references/version-matrix.md)。
 
 ---
 
@@ -605,7 +607,8 @@ noteId = Insert(pageId,{type:"note",name:"功能说明",content:"这是便签内
 | [references/prototype-styles.md](references/prototype-styles.md) | HTML 原型外壳变体 A/B/C：首次询问、项目级记忆、项目令牌区与应用规则 |
 | [references/html-only-mode.md](references/html-only-mode.md) | 仅 HTML 模式：设计规范、HTML 组件库、页面片段与组装 |
 | [adapters/axure/SKILL.md](adapters/axure/SKILL.md) | Axure 适配器：范围、执行顺序、验收层级、失败回退与 GUI 边界 |
-| [adapters/axure/references/axure-mode.md](adapters/axure/references/axure-mode.md) | Axure 完整参考：zee-rp 环境、RP/1、原生 `.rp` 读写、截图转布局、MCP 与证据边界 |
+| [adapters/axure/references/axure-mode.md](adapters/axure/references/axure-mode.md) | Axure 完整参考：zee-rp 环境、CLI 优先模式、RP/1、原生 `.rp` 读写、截图转布局、MCP 与证据边界 |
+| [adapters/axure/references/version-matrix.md](adapters/axure/references/version-matrix.md) | Axure RP9 / RP11 差异与处理：字段表、DOA / FCall / 事件门禁、模板与决策树 |
 | [adapters/figma/SKILL.md](adapters/figma/SKILL.md) | Figma 适配器：Remote MCP、席位、file_key、figma-use、验收与回退 |
 | [adapters/figma/references/figma-mcp.md](adapters/figma/references/figma-mcp.md) | Figma MCP 完整参考：读写工具、席位降级、组件/变量与错误速查 |
 | [adapters/modao/SKILL.md](adapters/modao/SKILL.md) | 墨刀适配器：生成型 MCP、异步任务、continue_task 迭代、权益降级与回退 |
@@ -625,9 +628,10 @@ noteId = Insert(pageId,{type:"note",name:"功能说明",content:"这是便签内
 
 ## 版本信息
 
-- **Skill**: 5.4.0
+- **Skill**: 5.5.0
 - **对齐**: pen.dev CLI 0.3.12 / Pen.app 1.2.5+ / zee-rp 0.2.0（RP9/RP11）/ Figma Remote MCP / 墨刀生成型 MCP
 - **更新**: 2026-10-23
+- **v5.5.0**: Axure 适配器新增执行模式：默认 `cli`（纯文件，不启动 Axure、不发 System Events / CGEvent、不写剪贴板、不抢焦点）；`gui-acceptance` 需逐项目显式授权；新增 RP9/RP11 [版本差异矩阵](adapters/axure/references/version-matrix.md)；preflight 支持 `--mode cli|gui`；生成/修改后追加 `version-lint`
 - **v5.4.0**: 新增模式 5（墨刀 Modao）：官方生成型 MCP 适配器 `adapters/modao/`；意图翻译 query → `generate_html` 异步生成 → `get_task_result` 轮询 → `continue_task` 迭代；产出交公共核心按 `shellVariant` 组装；manifest 新增 mode `modao`
 - **v5.3.0**: HTML 原型外壳与视觉解耦：新增外壳变体 A 顶部导航 / B 三栏标注评审 / C 直出，首次询问 `shellVariant` 并写入 `.prototype-designer.json`，后续默认沿用直到用户明确更换；配色 / 字体改由「项目令牌区」按项目前端与 UI 规范注入（中性默认兜底），移除明暗切换；editorial-ink 预设降级为遗留资产；Axure 子技能新增「第三方工具风险告知」前置闸口（zee-rp 非 Axure 官方），接管 GUI 前通知用户明确画入子流程
 - **v5.2.0**: 新增 HTML 原型视觉样式：首次生成询问并在 `.prototype-designer.json` 记住选择；新增「纸墨编辑风 editorial-ink」双主题预设、预览与令牌 CSS

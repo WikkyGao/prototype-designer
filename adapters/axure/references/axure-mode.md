@@ -8,6 +8,89 @@ zee-rp 是独立实验性项目（MIT），不是 Axure 官方产品。它的证
 
 ---
 
+## 零、执行模式：CLI 优先（默认）
+
+### 0.1 为什么要默认 CLI
+
+zee-rp 的 GUI 链路会主动争夺前台：`axvg.mjs paste` 用 System Events 切 Finder/Axure 焦点、按 Escape、点菜单；`tools/rp9_place.py` 走 macOS AX API 按菜单；`gui-roundtrip.swift` 激活 Axure 并发送保存/关闭；预览还需要操作浏览器。这些动作会打断用户正在做的事，表现为「抢鼠标 / 抢键盘 / 抢焦点」。
+
+文件级 CLI 不启动 Axure，也不发送任何系统输入事件，因此不会抢鼠标。代价是**不能证明 Axure 原生预览通过**——只能证明结构正确。
+
+### 0.2 两种模式
+
+| 模式 | 默认 | 允许的动作 | 禁止的动作 | 可声明的验收层级 |
+|---|---|---|---|---|
+| `cli` | 是 | RP/1 读写、`proto.mjs check/generate`、`rp-read`、`version-lint`、`set-widget-*`、`add-interaction`、`name-widget`、`duplicate-page`、`place-master`、`create-master`、`clone-library-*`、`fix-panel-registry` 等纯文件命令 | `open -a`、`osascript`、System Events、CGEvent、剪贴板粘贴、`axvg paste`、`rp9_place.py`、`gui-roundtrip`、浏览器点击 | `structural`；其余层级记 `not_run` |
+| `gui-acceptance` | 否（逐项目显式开启） | 上述 CLI 全部 + 打开验证副本、`Publish → Preview`、保存/关闭/重开 | 操作用户已打开的工程、覆盖原稿、跨版本升级原稿 | 可追加 `native-open` / `preview` / `gui-roundtrip` |
+
+选择规则：
+
+1. 进入 Axure 子技能时，先问「执行模式：CLI（默认，不接管鼠标）/ 需要原生验收」。
+2. 用户未明确要求原生验收 → 一律 `cli`。
+3. `gui-acceptance` 必须逐项目授权，不继承上一次选择；每次执行前按 §14.2 告知版本、文件、动作。
+4. 启动 GUI 前先完成全部 CLI 生成与结构校验；GUI 只做验收，不做生成。
+5. 用户不愿被打断时，优先由用户手动打开验证副本；Skill 只给出检查清单，不代为操作。
+
+### 0.3 CLI 能覆盖什么
+
+| 能力 | CLI | 说明 |
+|---|---|---|
+| 从零生成原生 RP9 `.rp` | ✅ | `proto.mjs check → generate`；只需一次人工准备 RP9 空白模板 |
+| 从零生成原生 RP11 整页 | ❌ | RP/1 只支持 `target: 9`；RP11 只能 `create-blank-project --version 11` 出空白工程，再用 writer / `clone-library-*` 写入，或在 Axure 11 中另存 RP9 副本升级 |
+| 读取已有 `.rp` | ✅ | `rp-read` / `axure.mjs rp-read` |
+| 修改文字/交互/页面/母版/表格/中继器 | ✅ | 各 writer 输出新文件，不覆盖原稿 |
+| 结构校验 | ✅ | 三零 + `version-lint` |
+| 本地渲染预览图 | ✅ | `proto.mjs generate` 输出 `*-preview.png` / `*@2x.png`；这是软件渲染，不是 Axure 原生预览 |
+| 截图识别与布局草稿 | ✅ | `trace.mjs draft/patch` 不需要 GUI |
+| 截图落成 `.rp` | ⚠️ | RP9 `rp9_place.py` / RP11 `axvg paste` 都是 GUI 路径；`cli` 模式下不自动执行 |
+| 原生打开 / 预览 / 保存重开 | ❌ | Axure 无公开的无头发布命令；只能 `gui-acceptance` 或用户手动 |
+| 组件库/母版复用 | ✅ | `create-master` / `place-master` / `clone-library-*` |
+
+截图落画的 CLI 替代：把 `draft.spec.json` 的内容重写为 RP/1（或已有 `.rp` 的 writer 调用），再走 `proto.mjs generate`；代价是丢失截图的自由几何，只保留可表达的布局。无法重写时，明确标记「截图落画需要 GUI」，不要偷偷切 GUI。
+
+### 0.4 CLI 流水线
+
+```bash
+# 0. 只需一次：确认 zee-rp、Python、模板
+node adapters/axure/scripts/axure-preflight.mjs --mode cli
+
+# 1. 静态检查（不启动 Axure）
+cd "$ZEE_RP_HOME"
+node scripts/proto.mjs check --spec /absolute/path/design.rp1.json
+
+# 2. 生成原生 RP9 + 产物
+#    generate 拒绝覆盖已有 .rp；重跑先删除目标文件
+rm -f /absolute/path/design.rp
+node scripts/proto.mjs generate \
+  --spec /absolute/path/design.rp1.json \
+  --out-dir /absolute/path/outputs \
+  --out-rp /absolute/path/design.rp
+
+# 3. 结构三零
+node bin/axure.mjs rp-read /absolute/path/design.rp --json
+
+# 4. 版本键集 lint（三零查不出）
+node scripts/version-lint.mjs /absolute/path/design.rp --version 9
+
+# 5. 已有 .rp 的修改同样只走文件命令，输出新文件
+node scripts/set-widget-text.mjs source.rp edited.rp "Page 1" LBL_NAME "新的文案"
+node scripts/add-interaction.mjs edited.rp interactive.rp "提交按钮" \
+  --event OnClick --action show target="提示框" animation=slideDown duration=300
+node bin/axure.mjs rp-read /absolute/path/interactive.rp --json
+```
+
+- RP/1 只认内置主题令牌；项目 `design.md` 的自定义 token 不会注入原生 `.rp`，需映射到 `enterprise-light` 等内置主题，或生成后修改
+- `generate` 拒绝覆盖已有 `.rp`，且没有 `--force`；重跑前先删除目标文件
+
+`cli` 模式的交付口径固定为：
+
+- `acceptance.structural = passed`（三零 + version-lint 全过）
+- `acceptance.nativeOpen / preview / guiRoundtrip = not_run`
+- `limitations` 写「Axure 原生预览待验收；本轮未接管 GUI」
+- 需要升级验收时，另行询问，不在同一次执行里静默开启
+
+---
+
 ## 一、适用场景
 
 - 交付物必须在 Axure RP 中继续编辑，而不是只能看的图片或 HTML
@@ -67,7 +150,16 @@ export AXURE_BLANK_TEMPLATE_RP11=/absolute/path/to/own-rp11-blank.rp
 
 也可以把模板放在 zee-rp 仓库的 `templates/` 下，命名为 `axure-rp9-blank.rp` / `axure-rp11-blank.rp`；本 skill 的 preflight 会自动识别。模板必须由目标 Axure 版本自己保存，不能跨版本混用。仓库不分发模板、官方元件库或运行时。
 
-### 3.3 MCP（可选，但推荐用于改已有工程）
+### 3.3 MCP（可选；文件级工具不抢鼠标，GUI 工具会）
+
+zee-rp 的 MCP 工具分两类，调用前先看它是否会碰前台：
+
+| 类别 | 工具示例 | 是否接管 GUI |
+|---|---|---|
+| 文件级 | `rp_read`、`create_blank_project`、`duplicate_page`、`add_interaction`、`set_widget_text`、`create_master`、`place_master`、`clone_library_widget`、`name_widget` | 否 |
+| GUI 级 | `gui_roundtrip`、`jobs_*`、依赖预览的验收 | 是 |
+
+`cli` 模式只允许文件级 MCP；`gui_roundtrip` / `jobs_*` 仅在 `gui-acceptance` 模式下使用。
 
 ```json
 {
@@ -210,7 +302,9 @@ node scripts/proto.mjs explore --spec /absolute/path/design.rp1.json --max-depth
 
 `check` 失败时按诊断的 `pointer` / `code` 修复；所有诊断带 `candidatePatches`，可用 `--auto-heal` 自动修复后重验。**不要绕过 check 直接 generate。**
 
-### 5.3 在 Axure 11 中验收
+### 5.3 在 Axure 11 中验收（仅 `gui-acceptance`）
+
+> 本节所有操作都会激活 Axure、接管前台，**默认 `cli` 模式不执行**。只有用户明确要求原生验收并确认后，才在验证副本上执行；用户更愿意自己操作时，只提供下面的检查清单。
 
 RP/1 产物是 RP9 工程，Axure 11 打开时可能提示升级。**先复制，再验证**：
 
@@ -537,11 +631,14 @@ node bin/axure.mjs rp-read /absolute/path/design.rp --json
 
 - **RP/1 产物是 RP9**。zee-rp 0.2.0 的 `proto.mjs generate` 不接受 `target: 11`；不要在 RP/1 源码里写 `target: 11` 然后期待 RP11 产物
 - Axure 11 打开 RP9 工程会提示升级。**先复制**为 `*-rp11-verify.rp`，只对副本确认升级；不要保存回 `design.rp`
-- 需要原生 RP11 时，用 `AXURE_BLANK_TEMPLATE_RP11` 和 `--version 11`，不要拿 RP9 产物冒充
+- 需要原生 RP11 时，用 `create-blank-project --version 11` + `AXURE_BLANK_TEMPLATE_RP11` 起步，再用 writer / `clone-library-*` 写入；不要拿 RP9 产物冒充，也不要说 RP/1 能直接出 RP11 整页
 - 不要用通用 `AXURE_BLANK_TEMPLATE` 指向另一个版本的模板；优先用版本专用变量，避免“模板 11 + 目标 9”这类静默错配
 - 交付说明写清楚：产物版本、验证所用 Axure 版本、是否经过升级
+- 字段级差异、DOA / FCall / 事件差异与 `version-lint` 门禁见 [version-matrix.md](version-matrix.md)
 
-### 14.2 接管 GUI 前先告知用户
+### 14.2 接管 GUI 前先告知用户（仅 `gui-acceptance`）
+
+> `cli` 模式不会执行本节任何动作。只有用户明确开启 `gui-acceptance` 后，下列操作才允许，且必须逐次确认。
 
 以下操作都算“接管电脑”，执行前必须向用户说明并取得确认：
 

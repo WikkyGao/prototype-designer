@@ -2,7 +2,7 @@
 
 页面设计 Skill，支持 Codex 和 Claude Code。pen.dev 链路用 CLI Agent 快速出图、MCP `execute` 精细控制；Axure 链路经 zee-rp 的 CLI/MCP 生成可继续在 Axure RP 中编辑的原生 `.rp`；Figma 链路经 Remote MCP 读写云端设计；配置文件管理组件库。
 
-> **重要**：Pencil 已正式更名为 **pen.dev**。命令 `pencil` → `pen`，npm 包 `@pencil.dev/cli` → `@pen.dev/cli`，环境变量 `PENCIL_*` → `PEN_*`。本 Skill v5.4.0 已对齐 pen.dev CLI 0.3.12、Pen.app 1.2.5+、zee-rp 0.2.0、Figma Remote MCP 与墨刀生成型 MCP；HTML 原型外壳分 A / B / C 三种变体（首次询问 + 项目级记忆），视觉由项目令牌区按项目规范注入；Axure 子技能前置 zee-rp 第三方工具风险告知。zee-rp 是独立实验性项目，不是 Axure 官方产品。
+> **重要**：Pencil 已正式更名为 **pen.dev**。命令 `pencil` → `pen`，npm 包 `@pencil.dev/cli` → `@pen.dev/cli`，环境变量 `PENCIL_*` → `PEN_*`。本 Skill v5.5.0 已对齐 pen.dev CLI 0.3.12、Pen.app 1.2.5+、zee-rp 0.2.0、Figma Remote MCP 与墨刀生成型 MCP；HTML 原型外壳分 A / B / C 三种变体（首次询问 + 项目级记忆），视觉由项目令牌区按项目规范注入；Axure 子技能前置 zee-rp 第三方工具风险告知，默认 CLI 模式不接管鼠标/键盘，原生验收需逐项目开启 `gui-acceptance`。zee-rp 是独立实验性项目，不是 Axure 官方产品。
 
 ## 🗺️ Skill 全流程
 
@@ -38,8 +38,9 @@
   - `AXURE_BLANK_TEMPLATE_RP9`：RP/1 → RP9 原生生成
   - `AXURE_BLANK_TEMPLATE_RP11`：原生 RP11 新建/编辑
   - 也可放在 `$ZEE_RP_HOME/templates/axure-rp9-blank.rp` / `axure-rp11-blank.rp`，preflight 会自动识别
-- 运行 `node adapters/axure/scripts/axure-preflight.mjs` 自检
-- **Axure 11 验收**：RP/1 产物是 RP9 原生工程；复制一份用 Axure 11 打开并升级，`Publish → Preview` 点击交互，不覆盖交付文件
+- 运行 `node adapters/axure/scripts/axure-preflight.mjs --mode cli` 自检（CLI 模式不要求本机安装 Axure）
+- **默认 CLI 模式**：生成/读取/修改/结构校验全部走文件命令，不启动 Axure、不抢鼠标；原生预览记 `not_run`
+- **Axure 11 验收（可选）**：逐项目开启 `gui-acceptance`；RP/1 产物是 RP9 原生工程，复制一份用 Axure 11 打开并升级，`Publish → Preview` 点击交互，不覆盖交付文件
 
 **模式 4（Figma 云端文件 + 可选 HTML）**：
 
@@ -156,16 +157,17 @@ exit()
 
 ```bash
 export ZEE_RP_HOME=/absolute/path/to/zee-rp
-node adapters/axure/scripts/axure-preflight.mjs
+node adapters/axure/scripts/axure-preflight.mjs --mode cli
 
 cd "$ZEE_RP_HOME"
 node scripts/proto.mjs check --spec /abs/path/design.rp1.json
 node scripts/proto.mjs generate --spec /abs/path/design.rp1.json \
   --out-dir /abs/path/outputs --out-rp /abs/path/design.rp
 node bin/axure.mjs rp-read /abs/path/design.rp --json
+node scripts/version-lint.mjs /abs/path/design.rp --version 9
 ```
 
-已有 `.rp` 先 `rp-read`，再用 `name-widget` / `set-widget-text` / `add-interaction` 或 MCP 会话链（`axure_open` → `locate` → `edit_text` → `axure_save` → `verify`）修改，输出新文件。原生 RP11 用 `create-blank-project --version 11` 与对应 writer/MCP；RP/1 产物在 Axure 11 中验证时打开副本，避免升级改写交付文件。完整说明见 [adapters/axure/references/axure-mode.md](adapters/axure/references/axure-mode.md)。
+已有 `.rp` 先 `rp-read`，再用 `name-widget` / `set-widget-text` / `add-interaction` 等文件命令修改，输出新文件。文件级 MCP（`axure_open` → `locate` → `edit_text` → `axure_save` → `verify`）不接管 GUI；`gui_roundtrip` / `jobs_*` 属 GUI 工具，仅在 `gui-acceptance` 模式使用。原生 RP11 用 `create-blank-project --version 11` 与对应 writer/MCP；RP/1 产物在 Axure 11 中验证时打开副本，避免升级改写交付文件。CLI/GUI 边界见 [axure-mode.md](adapters/axure/references/axure-mode.md)，版本差异见 [version-matrix.md](adapters/axure/references/version-matrix.md)。
 
 #### 模式 4：Figma（Remote MCP）
 
@@ -228,11 +230,20 @@ Agent 会根据以下标准自动判断一个元素是否应该成为可复用�
 
 ## 版本
 
-- 版本号: 5.4.0
+- 版本号: 5.5.0
 - 创建日期: 2026-03-31
-- 更新日期: 2026-10-22
+- 更新日期: 2026-10-23
 
 ## 更新日志
+
+### v5.5.0 (2026-10-23)
+
+- 🖱️ Axure 适配器新增执行模式：默认 **CLI**，纯文件生成/读取/修改/结构校验，不启动 Axure、不抢鼠标/键盘/焦点
+- 🔐 `gui-acceptance` 需逐项目显式授权，且只操作验证副本；CLI 模式不把结构验证说成原生预览
+- 📋 新增 RP9/RP11 版本差异矩阵：文件头、模板、字段、DOA、FCall、事件与 `version-lint` 门禁
+- 🧱 明确 RP/1 只能生成 RP9；RP11 CLI 仅覆盖空白工程 + writer/clone-library，整页需 GUI `axvg paste --version 11` 或 RP9 副本另存升级
+- 🧪 preflight 支持 `--mode cli|gui`；CLI 模式不要求本机安装 Axure，并输出无 GUI 流水线
+- ✅ 生成/修改后追加 `version-lint --version 9|11`
 
 ### v5.4.0 (2026-10-23)
 

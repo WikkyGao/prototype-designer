@@ -2,7 +2,7 @@
   "schemaVersion": "1.0",
   "id": "axure",
   "name": "Axure",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "status": "ready",
   "migrationState": "extracted",
   "nativeFormat": ".rp",
@@ -13,6 +13,8 @@
     "axure"
   ],
   "preflight": "scripts/axure-preflight.mjs",
+  "executionModes": ["cli", "gui-acceptance"],
+  "defaultExecutionMode": "cli",
   "capabilities": {
     "create": true,
     "read": true,

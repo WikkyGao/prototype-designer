@@ -4,11 +4,18 @@ import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
+const argv = process.argv.slice(2);
+const modeAt = argv.indexOf('--mode');
+const mode = modeAt >= 0 ? argv[modeAt + 1] : (process.env.AXURE_EXECUTION_MODE || 'cli');
+const validMode = mode === 'cli' || mode === 'gui';
+const effectiveMode = validMode ? mode : 'cli';
+
 const required = [
   'bin/axure.mjs',
   'bin/mcp.mjs',
   'scripts/proto.mjs',
   'scripts/trace.mjs',
+  'scripts/version-lint.mjs',
   'references/capabilities.md'
 ];
 
@@ -28,6 +35,13 @@ let failed = false;
 function ok(message) { lines.push(`[ok]   ${message}`); }
 function warn(message) { lines.push(`[warn] ${message}`); }
 function fail(message) { failed = true; lines.push(`[fail] ${message}`); }
+function info(message) { lines.push(`[info] ${message}`); }
+
+if (!validMode) {
+  fail(`--mode 只能是 cli 或 gui，收到: ${mode ?? '(空)'}`);
+} else {
+  info(`执行模式: ${effectiveMode === 'cli' ? 'cli（默认；不启动 Axure，不接管鼠标/键盘）' : 'gui-acceptance（会激活 Axure 并接管前台）'}`);
+}
 
 let zeeVersion = null;
 if (found) {
@@ -108,7 +122,9 @@ if (template) {
   } else fail(`AXURE_BLANK_TEMPLATE 指向的文件不存在: ${template}`);
 }
 
-if (process.platform === 'darwin') {
+if (effectiveMode === 'cli') {
+  info('CLI 模式不检查、不启动 Axure；生成本身不需要 GUI。原生打开 / 预览 / 保存重开验收请改用 --mode gui 或由用户手动完成');
+} else if (process.platform === 'darwin') {
   const apps = [
     '/Applications/Axure RP 9.app',
     '/Applications/Axure RP 11.app',
@@ -122,8 +138,8 @@ if (process.platform === 'darwin') {
   const has11 = installed.some(path => path.includes('Axure RP 11.app'));
   if (has9 && has11) {
     lines.push('[info] 检测到多版本 Axure：RP/1 generate 产出 RP9；Axure 11 验收请复制 .rp 后打开并确认升级；原生 RP11 用 AXURE_BLANK_TEMPLATE_RP11 + --version 11');
-    lines.push('[info] 接管 GUI 前先告知用户：用哪个版本、打开哪个副本、会执行哪些点击/输入/保存/关闭动作');
   }
+  lines.push('[info] 接管 GUI 前先告知用户：用哪个版本、打开哪个副本、会执行哪些点击/输入/保存/关闭动作');
 } else {
   warn(`当前平台是 ${process.platform}。zee-rp 的 GUI 证据主要来自 macOS + Axure RP 9/11 样本`);
 }
@@ -146,6 +162,26 @@ if (found) {
 }
 
 lines.push('');
-lines.push(failed ? '结论：环境未就绪，先修复 [fail] 项。' : '结论：基础环境就绪；仍需在 Axure 中完成预览与保存/重开验收。');
+if (effectiveMode === 'cli') {
+  if (templateRp9 && !process.env.AXURE_BLANK_TEMPLATE_RP9) {
+    lines.push(`提示：RP/1 生成前先导出模板变量：export AXURE_BLANK_TEMPLATE_RP9="${templateRp9}"`);
+    if (templateRp11 && !process.env.AXURE_BLANK_TEMPLATE_RP11) {
+      lines.push(`     原生 RP11 时再加：export AXURE_BLANK_TEMPLATE_RP11="${templateRp11}"`);
+    }
+    lines.push('');
+  }
+  lines.push('CLI 流水线（不启动 Axure）：');
+  lines.push('  node scripts/proto.mjs check --spec /abs/design.rp1.json');
+  lines.push('  rm -f /abs/design.rp   # generate 不覆盖已有 .rp');
+  lines.push('  node scripts/proto.mjs generate --spec /abs/design.rp1.json --out-dir /abs/outputs --out-rp /abs/design.rp');
+  lines.push('  node bin/axure.mjs rp-read /abs/design.rp --json');
+  lines.push('  node scripts/version-lint.mjs /abs/design.rp --version 9');
+  lines.push('');
+}
+lines.push(failed
+  ? '结论：环境未就绪，先修复 [fail] 项。'
+  : (effectiveMode === 'cli'
+    ? '结论：CLI 环境就绪；可完成生成/读取/修改/结构校验，原生预览需另行验收。'
+    : '结论：基础环境就绪；仍需在 Axure 中完成预览与保存/重开验收。'));
 console.log(lines.join('\n'));
 process.exitCode = failed ? 1 : 0;

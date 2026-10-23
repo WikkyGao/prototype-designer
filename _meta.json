@@ -1,9 +1,9 @@
 {
   "name": "prototype-designer",
   "display_name": "页面设计技能（pen.dev / Axure / Figma；OpenDesign planned）",
-  "version": "5.4.0",
-  "description": "页面设计编排 Skill，采用编排层 + 适配器架构。支持 pen.dev、Axure、Figma 与墨刀（Modao）：进入设计前检查 PRD、标准控件库与设计规范，再确认产出形态「原生设计文件 + HTML」或「仅 HTML」；原生工具由本 Skill 询问 Pen / Axure / Figma（OpenDesign 为 planned 占位，当前禁用）。Pen/Axure/Figma 的完整细节分别位于 adapters/pen、adapters/axure 与 adapters/figma；Axure 子技能进入前先告知 zee-rp 第三方工具风险，接管 GUI 前通知用户。生成 HTML 原型时首次询问外壳变体（A 顶部导航 / B 三栏标注评审 / C 直出）并写入项目级配置，后续默认沿用直到用户明确更换；配色与字体由项目令牌区按项目前端/UI 规范注入，不绑定视觉预设。原型输出携带 #prototype-manifest + data-page/data-route/data-context，便于原型转前端解析。",
-  "description_en": "Page design orchestration skill with an orchestrator + adapter architecture. Supports pen.dev, Axure, Figma and Modao (MockingBot): checks PRD, component library and design spec, then confirms native + HTML or HTML-only; the native tool is chosen here (Pen / Axure / Figma, with OpenDesign planned and disabled). Adapter details live in adapters/pen, adapters/axure and adapters/figma; the Axure adapter discloses third-party zee-rp tool risk before any work and notifies the user before taking over the GUI. HTML prototypes ask for a shell variant once (A top-nav / B three-column annotate / C direct), remember it in project config, and apply it until explicitly changed; all visuals are driven by project tokens instead of bundled presets.",
+  "version": "5.5.0",
+  "description": "页面设计编排 Skill，采用编排层 + 适配器架构。支持 pen.dev、Axure、Figma 与墨刀（Modao）：进入设计前检查 PRD、标准控件库与设计规范，再确认产出形态「原生设计文件 + HTML」或「仅 HTML」；原生工具由本 Skill 询问 Pen / Axure / Figma（OpenDesign 为 planned 占位，当前禁用）。Pen/Axure/Figma 的完整细节分别位于 adapters/pen、adapters/axure 与 adapters/figma；Axure 子技能进入前先告知 zee-rp 第三方工具风险；默认 CLI 模式不接管鼠标/键盘，仅在逐项目开启 gui-acceptance 并确认后才操作 Axure GUI。生成 HTML 原型时首次询问外壳变体（A 顶部导航 / B 三栏标注评审 / C 直出）并写入项目级配置，后续默认沿用直到用户明确更换；配色与字体由项目令牌区按项目前端/UI 规范注入，不绑定视觉预设。原型输出携带 #prototype-manifest + data-page/data-route/data-context，便于原型转前端解析。",
+  "description_en": "Page design orchestration skill with an orchestrator + adapter architecture. Supports pen.dev, Axure, Figma and Modao (MockingBot): checks PRD, component library and design spec, then confirms native + HTML or HTML-only; the native tool is chosen here (Pen / Axure / Figma, with OpenDesign planned and disabled). Adapter details live in adapters/pen, adapters/axure and adapters/figma; the Axure adapter discloses third-party zee-rp tool risk before any work; its default CLI mode never takes over mouse or keyboard, and GUI access requires per-project opt-in and confirmation. HTML prototypes ask for a shell variant once (A top-nav / B three-column annotate / C direct), remember it in project config, and apply it until explicitly changed; all visuals are driven by project tokens instead of bundled presets.",
   "author": {
     "name": "WikkyGao",
     "email": "",
@@ -149,6 +149,18 @@
     "T8 只决定原生/HTML，具体工具由本 Skill 询问"
   ],
   "changelog": [
+    {
+      "version": "5.5.0",
+      "date": "2026-10-23",
+      "changes": [
+        "Axure 适配器新增执行模式：默认 cli（纯文件，不启动 Axure、不发 System Events/CGEvent、不写剪贴板、不抢焦点）；gui-acceptance 需逐项目显式授权",
+        "cli 模式固定验收口径：structural 通过，native-open/preview/gui-roundtrip 记 not_run；不得把结构验证说成 Axure 已验证",
+        "新增 version-matrix.md：RP9/RP11 文件头、模板、动作字段、DOA、FCall、事件差异与 version-lint 门禁",
+        "preflight 支持 --mode cli|gui：CLI 模式不要求本机安装 Axure，并输出无 GUI 流水线",
+        "生成/修改后追加 version-lint --version 9|11，补齐三零查不出的版本专属键违规",
+        "明确 RP/1 只能生成 RP9；RP11 CLI 路径仅覆盖空白工程 + writer/clone-library，整页需 GUI axvg paste --version 11 或 RP9 副本另存升级"
+      ]
+    },
     {
       "version": "5.4.0",
       "date": "2026-10-23",
