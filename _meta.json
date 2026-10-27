@@ -1,7 +1,7 @@
 {
   "name": "prototype-designer",
   "display_name": "页面设计技能（pen.dev / Axure / Figma；OpenDesign planned）",
-  "version": "5.5.0",
+  "version": "5.6.0",
   "description": "页面设计编排 Skill，采用编排层 + 适配器架构。支持 pen.dev、Axure、Figma 与墨刀（Modao）：进入设计前检查 PRD、标准控件库与设计规范，再确认产出形态「原生设计文件 + HTML」或「仅 HTML」；原生工具由本 Skill 询问 Pen / Axure / Figma（OpenDesign 为 planned 占位，当前禁用）。Pen/Axure/Figma 的完整细节分别位于 adapters/pen、adapters/axure 与 adapters/figma；Axure 子技能进入前先告知 zee-rp 第三方工具风险；默认 CLI 模式不接管鼠标/键盘，仅在逐项目开启 gui-acceptance 并确认后才操作 Axure GUI。生成 HTML 原型时首次询问外壳变体（A 顶部导航 / B 三栏标注评审 / C 直出）并写入项目级配置，后续默认沿用直到用户明确更换；配色与字体由项目令牌区按项目前端/UI 规范注入，不绑定视觉预设。原型输出携带 #prototype-manifest + data-page/data-route/data-context，便于原型转前端解析。",
   "description_en": "Page design orchestration skill with an orchestrator + adapter architecture. Supports pen.dev, Axure, Figma and Modao (MockingBot): checks PRD, component library and design spec, then confirms native + HTML or HTML-only; the native tool is chosen here (Pen / Axure / Figma, with OpenDesign planned and disabled). Adapter details live in adapters/pen, adapters/axure and adapters/figma; the Axure adapter discloses third-party zee-rp tool risk before any work; its default CLI mode never takes over mouse or keyboard, and GUI access requires per-project opt-in and confirmation. HTML prototypes ask for a shell variant once (A top-nav / B three-column annotate / C direct), remember it in project config, and apply it until explicitly changed; all visuals are driven by project tokens instead of bundled presets.",
   "author": {
@@ -149,6 +149,15 @@
     "T8 只决定原生/HTML，具体工具由本 Skill 询问"
   ],
   "changelog": [
+    {
+      "version": "5.6.0",
+      "date": "2026-10-27",
+      "changes": [
+        "新增客户端能力探测：无本地 shell / 持久文件系统 / 原生 MCP（如 ChatGPT 网页版与临时沙箱）时自动降级为「仅 HTML」模式",
+        "降级模式接受用户粘贴的 PRD / 设计规范，只输出单文件自包含 HTML；不写 components.json、不尝试 Pen/Axure/Figma/墨刀、不引导 skillhub login",
+        "README 平台兼容补充 ChatGPT / 网页沙箱说明：CLI 安装到沙箱不持久，对用户本机无意义"
+      ]
+    },
     {
       "version": "5.5.0",
       "date": "2026-10-23",

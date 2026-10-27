@@ -3,11 +3,11 @@ name: prototype-designer
 slug: prototype-designer
 displayName: prototype-designer
 
-version: 5.3.0
+version: 5.6.0
 description: 页面设计 Skill，支持 pen.dev（原 Pencil）、Axure 与 Figma。可创建/修改 .pen、管理组件库、生成可交互 HTML 原型；也可经 zee-rp 的 CLI/MCP 生成和修改可在 Axure RP 中继续编辑的原生 .rp；或通过 Figma Remote MCP 读取/创建云端设计（写操作需 Full/Dev 席位，只读席位自动降级）。进入设计前先检查 PRD.md、标准控件库与设计规范（design.md、tokens.json、variables.css、UI Design.pen/rp/html 或 Figma 文件），已有资产强制复用，缺失则询问或建默认并标注「默认值待确认」。随后确认产出形态：「原生设计文件 + 可交互 HTML」或「仅 HTML」；选择原生后再由本 Skill 询问 Pen / Axure / Figma / 墨刀 Modao（OpenDesign planned，当前禁用）。（仅 HTML 跳过原生工具环境校验，但保留 PRD/控件库/设计规范/组件库流程）。生成 HTML 原型时首次询问外壳变体（A 顶部导航 / B 三栏标注评审 / C 直出）并记住选择，后续默认沿用直到用户明确更换；配色与字体由项目令牌区按项目前端/UI 规范注入，不绑定视觉预设。Axure 子技能进入前先告知 zee-rp 第三方工具风险，默认 CLI 模式不接管鼠标/键盘，原生验收需逐项目开启 gui-acceptance；墨刀子技能经官方生成型 MCP 异步产出单文件 HTML（continue_task 迭代）。CLI Agent 快速出图，MCP execute 精细控制，browser 网页转设计。用户提到 Pencil/pen.dev、生成 .pen、Figma、Figma MCP、墨刀、MockingBot、modao、页面/UI 设计、组件库、网页转设计、HTML 原型、Axure、.rp、RP/1 或 zee-rp 时应使用此 skill。
 author: AI Agent Team
 created: 2026-03-31
-updated: 2026-10-22
+updated: 2026-10-27
 tags:
   - design
   - ui
@@ -102,6 +102,25 @@ v3.x 使用的 9 个 MCP 工具**已全部移除**。若沿用旧写法会直接
 | 其他或无提问工具 | 输出编号选项，**停止并等待回复**；不得自问自答 |
 
 用户回复前不得继续执行不可逆操作。下文所有“提问”均指本节协议。
+
+### 0.5.0.1 客户端能力探测（先于提问）
+
+进入流程前先探测当前客户端能力；缺失时**自动降级**，不得要求用户先安装本地工具或登录 CLI。
+
+| 能力 | 探测信号 | 缺失时 |
+|---|---|---|
+| 本地 shell | 可执行 `node` / `python3` / `pen` 等命令 | 视为无本地工具 |
+| 持久文件系统 | 可读写项目目录，且后续轮次仍存在 | 视为临时沙箱 |
+| 原生 MCP | Pen / Figma / 墨刀 MCP 工具可用 | 跳过对应模式 |
+| 交互提问 | `AskUserQuestion` / `question` 可用 | 用 §0.5.0 编号选项 |
+
+- **无 shell、无持久文件系统或无原生 MCP**（如 ChatGPT 网页版、临时沙箱）→ 强制「仅 HTML」模式：
+  - 接受用户直接粘贴 PRD、设计规范或控件清单，不要求文件路径，不写入 `components.json`
+  - 只输出单文件自包含 HTML（CSS/JS 内联），产物由用户自行复制保存
+  - 不尝试 pen.dev / Axure / Figma / 墨刀，不执行 `skillhub login`，不引导安装 CLI
+  - 明确告知：产物不会持久化到用户本机
+- **有 shell 但无对应原生工具** → 只提供「仅 HTML」，不引导安装 pen / zee-rp / Axure
+- **有持久文件系统且对应 MCP 可用** → 按 §0.5.4 正常提供原生与仅 HTML 选项
 
 固定顺序：**PRD.md → 标准控件库 → 设计规范文档 → 产出形式确认**。这四项完成前只做检测与询问，**不得**创建 `.pen`、控件库、设计规范或原型文件。
 
@@ -628,9 +647,10 @@ noteId = Insert(pageId,{type:"note",name:"功能说明",content:"这是便签内
 
 ## 版本信息
 
-- **Skill**: 5.5.0
+- **Skill**: 5.6.0
 - **对齐**: pen.dev CLI 0.3.12 / Pen.app 1.2.5+ / zee-rp 0.2.0（RP9/RP11）/ Figma Remote MCP / 墨刀生成型 MCP
-- **更新**: 2026-10-23
+- **更新**: 2026-10-27
+- **v5.6.0**: 新增客户端能力探测：无本地 shell / 持久文件系统 / 原生 MCP（如 ChatGPT 网页版与临时沙箱）时自动降级为「仅 HTML」模式；接受用户粘贴的 PRD / 设计规范，只输出单文件自包含 HTML，不写 `components.json`、不尝试 Pen/Axure/Figma/墨刀、不引导 `skillhub login`
 - **v5.5.0**: Axure 适配器新增执行模式：默认 `cli`（纯文件，不启动 Axure、不发 System Events / CGEvent、不写剪贴板、不抢焦点）；`gui-acceptance` 需逐项目显式授权；新增 RP9/RP11 [版本差异矩阵](adapters/axure/references/version-matrix.md)；preflight 支持 `--mode cli|gui`；生成/修改后追加 `version-lint`
 - **v5.4.0**: 新增模式 5（墨刀 Modao）：官方生成型 MCP 适配器 `adapters/modao/`；意图翻译 query → `generate_html` 异步生成 → `get_task_result` 轮询 → `continue_task` 迭代；产出交公共核心按 `shellVariant` 组装；manifest 新增 mode `modao`
 - **v5.3.0**: HTML 原型外壳与视觉解耦：新增外壳变体 A 顶部导航 / B 三栏标注评审 / C 直出，首次询问 `shellVariant` 并写入 `.prototype-designer.json`，后续默认沿用直到用户明确更换；配色 / 字体改由「项目令牌区」按项目前端与 UI 规范注入（中性默认兜底），移除明暗切换；editorial-ink 预设降级为遗留资产；Axure 子技能新增「第三方工具风险告知」前置闸口（zee-rp 非 Axure 官方），接管 GUI 前通知用户明确画入子流程

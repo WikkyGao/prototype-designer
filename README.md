@@ -1,8 +1,8 @@
 # 页面设计 Skill（pen.dev / Axure / Figma）
 
-页面设计 Skill，支持 Codex 和 Claude Code。pen.dev 链路用 CLI Agent 快速出图、MCP `execute` 精细控制；Axure 链路经 zee-rp 的 CLI/MCP 生成可继续在 Axure RP 中编辑的原生 `.rp`；Figma 链路经 Remote MCP 读写云端设计；配置文件管理组件库。
+页面设计 Skill，支持 Codex、Claude Code 及通用 Agent；ChatGPT 网页版/沙箱可降级为仅 HTML 模式。pen.dev 链路用 CLI Agent 快速出图、MCP `execute` 精细控制；Axure 链路经 zee-rp 的 CLI/MCP 生成可继续在 Axure RP 中编辑的原生 `.rp`；Figma 链路经 Remote MCP 读写云端设计；配置文件管理组件库。
 
-> **重要**：Pencil 已正式更名为 **pen.dev**。命令 `pencil` → `pen`，npm 包 `@pencil.dev/cli` → `@pen.dev/cli`，环境变量 `PENCIL_*` → `PEN_*`。本 Skill v5.5.0 已对齐 pen.dev CLI 0.3.12、Pen.app 1.2.5+、zee-rp 0.2.0、Figma Remote MCP 与墨刀生成型 MCP；HTML 原型外壳分 A / B / C 三种变体（首次询问 + 项目级记忆），视觉由项目令牌区按项目规范注入；Axure 子技能前置 zee-rp 第三方工具风险告知，默认 CLI 模式不接管鼠标/键盘，原生验收需逐项目开启 `gui-acceptance`。zee-rp 是独立实验性项目，不是 Axure 官方产品。
+> **重要**：Pencil 已正式更名为 **pen.dev**。命令 `pencil` → `pen`，npm 包 `@pencil.dev/cli` → `@pen.dev/cli`，环境变量 `PENCIL_*` → `PEN_*`。本 Skill v5.6.0 已对齐 pen.dev CLI 0.3.12、Pen.app 1.2.5+、zee-rp 0.2.0、Figma Remote MCP 与墨刀生成型 MCP；HTML 原型外壳分 A / B / C 三种变体（首次询问 + 项目级记忆），视觉由项目令牌区按项目规范注入；Axure 子技能前置 zee-rp 第三方工具风险告知，默认 CLI 模式不接管鼠标/键盘，原生验收需逐项目开启 `gui-acceptance`。zee-rp 是独立实验性项目，不是 Axure 官方产品。
 
 ## 🗺️ Skill 全流程
 
@@ -90,6 +90,7 @@
 
 - **Codex**: 通过 `SKILL.md` 触发 skill；`agents/openai.yaml` 提供 Codex UI 元数据。文件读写、命令执行使用 Codex 当前可用工具。
 - **Claude Code**: 通过 `SKILL.md` 触发 skill。文件读写可使用 `Read` / `Edit` / `MultiEdit`，命令执行可使用 `Bash`。MCP 工具（`execute` / `get_app_state` / `get_style` / `read_skill` / `browser`）由 Pen.app 桌面应用提供。
+- **ChatGPT / 网页沙箱**: 无本地持久文件系统与原生 MCP 时，自动降级为「仅 HTML」：接受粘贴的 PRD/设计规范，只输出单文件自包含 HTML，不写 `components.json`、不尝试原生工具、不引导 `skillhub login`；沙箱内 CLI 安装不持久，对用户本机无意义。
 
 ### 激活 Skill
 
@@ -230,11 +231,17 @@ Agent 会根据以下标准自动判断一个元素是否应该成为可复用�
 
 ## 版本
 
-- 版本号: 5.5.0
+- 版本号: 5.6.0
 - 创建日期: 2026-03-31
-- 更新日期: 2026-10-23
+- 更新日期: 2026-10-27
 
 ## 更新日志
+
+### v5.6.0 (2026-10-27)
+
+- 🧭 新增客户端能力探测：无本地 shell / 持久文件系统 / 原生 MCP（如 ChatGPT 网页版与临时沙箱）时自动降级为「仅 HTML」模式
+- 📋 降级模式接受用户粘贴的 PRD / 设计规范，只输出单文件自包含 HTML；不写 `components.json`、不尝试 Pen/Axure/Figma/墨刀、不引导 `skillhub login`
+- 📚 README 平台兼容补充 ChatGPT / 网页沙箱说明：CLI 安装到沙箱不持久，对用户本机无意义
 
 ### v5.5.0 (2026-10-23)
 

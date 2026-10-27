@@ -1,7 +1,7 @@
 {
   "name": "prototype-designer",
   "displayName": "页面设计技能（pen.dev / Axure / Figma；OpenDesign planned）",
-  "version": "5.5.0",
+  "version": "5.6.0",
   "description": "页面设计编排 Skill：先检查 PRD、标准控件库与设计规范，再确认产出形态（原生设计文件 + HTML 或仅 HTML）；原生工具由本 Skill 询问 Pen / Axure / Figma（OpenDesign planned）。采用编排层 + 适配器架构，HTML 原型外壳分 A 顶部导航 / B 三栏标注评审 / C 直出三种变体，首次询问并记住选择；配色与字体由项目令牌区按项目前端/UI 规范注入，不绑定视觉预设；Axure 子技能前置第三方工具风险告知；墨刀（Modao）官方生成型 MCP 适配器异步产出单文件 HTML（continue_task 迭代）；原型内嵌 prototype-manifest，页面/交互可被原型转前端直接解析",
   "description_en": "Page design skill for pen.dev, Axure, Figma and Modao (MockingBot) — CLI-first for speed, MCP execute for fine-grained control, browser for web-to-design, zee-rp for native Axure .rp (third-party tool risk disclosed up front), Figma Remote MCP for cloud files, Modao generative MCP for async single-file HTML; HTML prototype shells come in three variants (A top-nav / B three-column annotate / C direct) with first-run confirmation and project-level memory, all visuals driven by project tokens",
   "author": "WikkyGao",
@@ -77,6 +77,15 @@
     "墨刀（Modao）适配器：官方生成型 MCP，query 翻译 → generate_html 异步生成 → continue_task 迭代"
   ],
   "changelog": [
+    {
+      "version": "5.6.0",
+      "date": "2026-10-27",
+      "changes": [
+        "新增客户端能力探测：无本地 shell / 持久文件系统 / 原生 MCP（如 ChatGPT 网页版与临时沙箱）时自动降级为「仅 HTML」模式",
+        "降级模式接受用户粘贴的 PRD / 设计规范，只输出单文件自包含 HTML；不写 components.json、不尝试 Pen/Axure/Figma/墨刀、不引导 skillhub login",
+        "README 平台兼容补充 ChatGPT / 网页沙箱说明：CLI 安装到沙箱不持久，对用户本机无意义"
+      ]
+    },
     {
       "version": "5.5.0",
       "date": "2026-10-23",
