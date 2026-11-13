@@ -1,7 +1,9 @@
 # execute API 完全参考
 
-> 对应 pen.dev CLI 0.3.12 / Pen.app 1.2.5+。内容源自官方 `read_skill({ path: "execute.md" })`。
+> 对应 pen.dev CLI **0.3.16**（2026-11-12 发布）。内容源自官方 `read_skill({ path: "execute.md" })`。
 > `execute` 取代了旧版的 `batch_design` + `batch_get` + `get_variables` + `set_variables` + `get_screenshot` + `export_nodes` + `snapshot_layout`。
+>
+> 0.3.12 → 0.3.16 变更摘要：**`Generate` 参数顺序反转**（type 提到第一位）并新增 `vectorize-image` / `remove-background` / `replace-background` 三种类型；`Export` 新增 `svg` 格式；新增 Generate 登录要求与配额挂起机制（`pencil://deferred-generation/`）。
 
 ---
 
@@ -68,7 +70,12 @@ function Update(path: string, updateData: Child): void;
 function Replace(path: string, nodeData: Child): string;
 function Move(path: string, parent?: string, index?: number): void;
 function Delete(path: string): void;
-function Generate(nodeId: string, type: "ai" | "svg" | "stock", prompt: string): void;
+// ⚠ 0.3.16 起 type 在第一位（旧版是 nodeId 在前，已反转）
+function Generate(type: "ai" | "svg", nodeId: string, prompt: string): void;      // 图片 fill 或 SVG 画作，见下文「Generate」
+function Generate(type: "stock", nodeId: string, query: string): void;
+function Generate(type: "vectorize-image", nodeId: string, imageUrl: string): void;
+function Generate(type: "remove-background", imageUrl: string): string;           // 返回透明抠图 url
+function Generate(type: "replace-background", imageUrl: string, prompt: string): string;  // 返回合成背景 url
 function SetVariables(variables: Record<string, VariableDefinition>, replace?: boolean): void;
 
 // ── 读取 ──
@@ -120,7 +127,7 @@ interface FindEmptySpaceInput {
   nodeId?: string;                                   // 锚点，用于串联多个屏幕
 }
 
-type ExportFormat = "png" | "jpeg" | "webp" | "pdf" | "html-tailwind" | "html-css";
+type ExportFormat = "png" | "jpeg" | "webp" | "pdf" | "svg" | "html-tailwind" | "html-css";
 ```
 
 `Get` 按**类型**识别参数，未使用的直接省略即可：`Get(screen, visit)`、`Get(visit)`、`Get(id, {depth:1})` 都合法。
@@ -148,6 +155,15 @@ type ExportFormat = "png" | "jpeg" | "webp" | "pdf" | "html-tailwind" | "html-cs
 ```js
 Get(n => n.name === "Primary Button" && Insert(n.id, {type:"text",name:"Button Label",content:"RESERVE NOW",fontFamily:"Inter",fontSize:13,fill:"#111111"}))
 ```
+
+### 组件实例的读取与修改（0.3.16 明确）
+
+- **实例（`ref` 节点）没有自己的 `children`**——子树来自组件。**不要 `Get` 实例去发现子节点**：用创建/响应映射里已有的组件子节点 id 拼 `instanceId + "/" + componentChildId` 路径；确需读展开子树才用 `Get(instanceId, {resolveInstances: true})`
+- 修改实例后代：改属性 `Update(instanceId+"/childId", {...})`；换节点 `newNodeId=Replace(instanceId+"/childId", {...})`；父是普通 frame 时才可用 `Insert()`
+- **Copy 后禁止用原后代 id 做 Update**——副本后代全部换了新 id，定制后代必须在 `Copy` 调用自身的 `descendants` 里完成
+- 实例不在布局内时，**同时覆写 `x` 和 `y`**（即使值为 0），绝不只写一个轴
+- 缩放实例优先覆写 `fit_content` / `fill_container`
+- 完整组件模式（slot 替换、嵌套实例路径等）用 `read_skill({ path: "guide/components.md" })` 现读
 
 ---
 
@@ -264,7 +280,7 @@ TakeScreenshot([heroId])
 
 - 导出节点到磁盘文件。无返回值，响应里列出写入文件的绝对路径
 - `outputPath`：图片格式传**目录**（每个节点写成 `<nodeId>.<ext>`）；HTML 格式传**文件路径**
-- 图片格式（`png`/`jpeg`/`webp`/`pdf`）：默认 2x 缩放，每个节点单独一个文件；`pdf` 会合并成单个多页 `export.pdf`
+- 图片格式（`png`/`jpeg`/`webp`/`pdf`/`svg`）：默认 2x 缩放，每个节点单独一个文件；`pdf` 会合并成单个多页 `export.pdf`；`svg` 把形状和文本保留为矢量路径、忽略 scale
 - HTML 格式（`html-tailwind`/`html-css`）：所有节点导出到**一个** HTML 文件，图片资源用**相对路径引用，绝不内嵌**
 - 用途是**交付最终产物或交接给代码**，不是用来检查工作；检查视觉用 `TakeScreenshot`
 
@@ -277,36 +293,52 @@ Export([pageId], "html-tailwind", "./landing.html")
 
 ## 六、Generate：图片与 SVG
 
-**核心认知：没有 `image` 节点类型。** 图片是作为 **fill** 施加到已有节点上的；SVG 会被转成 path 并加到父 frame 里。
+**⚠ 0.3.16 起签名反转：type 在第一位。** 旧写法 `Generate(nodeId, "svg", prompt)` 已失效。
+
+```js
+Generate("ai", nodeId, prompt)              // AI 生成图片 fill
+Generate("stock", nodeId, keywords)         // Unsplash 图库图片 fill
+Generate("svg", frameId, prompt)            // SVG 矢量画作
+Generate("vectorize-image", frameId, url)   // 已有图片描摹为矢量路径
+Generate("remove-background", url)          // → 返回透明抠图 url
+Generate("replace-background", url, prompt) // → 返回合成背景 url
+```
+
+**核心认知：没有 `image` 节点类型。** 图片是作为 **fill** 施加到已有节点上的；SVG/描摹会被转成 path 并加到父 frame 里。背景类转换（remove/replace-background）自己不写任何东西——把返回的 url 用 `Update(nodeId, {fill:{type:"image", url}})` 应用，且必须在**同一个 execute 调用**内完成（中间不要插 TakeScreenshot/Export/再次 Generate）。
+
+### 登录要求（0.3.16 新增）
+
+- `Generate` 需要 pen.dev 登录（`get_app_state` 的 `Account` 可见）。未登录时**每次 Generate 都会失败，所以直接不要调**
+- 未登录替代方案：用自己的工具出图存到 .pen 旁（`./images/hero.png`）作 image fill；矢量用手搓 `path`（仅在无法 Generate 时）；否则用占位并告知用户登录 pen.dev 可启用 Generate
 
 ### 异步行为（关键）
 
-- `"ai"` 和 `"svg"` 是**异步非阻塞**的，函数立刻返回，生成独立于 execute 进度完成（`"stock"` 是例外，会在调用期间直接应用 fill）
 - 结果会在**发起它的 execute 调用返回之后**才落到文档里。在那之前目标节点是空的/无填充的，立刻截图看不到它——**这是预期行为**
 - **绝不**因此重新生成、手工绘制，或往已生成 SVG 的 frame 里加子节点
-- 生成 SVG 的 frame 在生成期间保持 `placeholder: true`，完成后自动清除。用**廉价的读取**检查，**不要用截图**：
-
-```js
-Print(Get(logoFrameId, {depth: 0}).placeholder)
-```
-
-- **生成很慢**：SVG 可能要几分钟。placeholder 还挂着的时候**不要干等**，继续做设计的其他部分，做完另一个 section 再偶尔回查，**不要每次 execute 都查**
+- 检查进度用**廉价的读取**，不要用截图：
+  - frame 类型（`svg`/`vectorize-image`）：`Print(Get(logoFrameId, {depth: 0}).placeholder)`
+  - fill 类型（`ai`/`stock`/背景转换）：fill url 先是 `pencil:pending-image-...` 占位，完成后原地改写为真实资源路径：`Print(Get(heroId, {depth: 0}).fill)`
+- **生成很慢**：SVG 可能要几分钟。placeholder 还挂着时**不要干等**，继续做设计的其他部分，做完另一个 section 再偶尔回查，**不要每次 execute 都查**
 - 只有确实没别的事做了，才用那个极小的 Get/Print 轮询，**间隔要慷慨**（中间穿插其他校验）。**绝不要背靠背连发检查**
-- placeholder 清除后才能截图。若已清除但 frame 仍为空，说明生成失败——**这是唯一可以对该节点重新 Generate 的情况**
+
+### 失败与配额（0.3.16 新增）
+
+- **失败是静默的**：frame 的 placeholder 清了但仍无子节点，或 fill 的 url 消失了——这是**唯一**可以对同一节点重新 Generate 的情况
+- **配额挂起**：url 为 `pencil://deferred-generation/...` 表示图片配额已用尽、在等待。它不会自行恢复：用户要在画布/fill 面板里手动启动。**绝不调用 Generate 重试**（只会追加一个排队请求）；用户要求换图或恢复运行时再正常 Generate，会替换挂起请求
+- `pencil://deferred-generation/` url 的 query 参数 form-encode 了 `prompt`/`source`（`+` 是空格），可读出原请求；同 url 的节点是同一请求的副本，只在组件上生成一次
 
 ### 图片（`"ai"` / `"stock"`）
 
 - **绝不猜测或编造图片 URL**，一律用 `Generate`
-- 显示图片：先 Insert 一个 frame 或 rectangle，再用 `Generate` 把图片作为 fill 施加到该节点
-- `type`：`"ai"` = AI 生成图；`"stock"` = Unsplash 图库
-- `prompt`：`"ai"` 用详细的描述性 prompt；`"stock"` 用 **1-3 个关键词**的检索式（简单、具体，不要用途或抽象词）
+- 显示图片：先 Insert 一个 frame 或 rectangle，再 `Generate("ai"|"stock", nodeId, ...)` 把图片作为 fill 施加到该节点
+- `"ai"` 用详细的描述性 prompt；`"stock"` 用 **1-3 个关键词**的检索式（简单、具体，不要用途或抽象词）
 - `"stock"` 在调用期间应用 fill；找不到匹配照片会返回 warning 且节点无图
 
-### SVG（`"svg"`）
+### SVG / 矢量（`"svg"` / `"vectorize-image"`）
 
-- **任何绘制任务都用 SVG 生成**：logo、插画、吉祥物、徽章、装饰画、抽象图案，或任何用户要求"画一个"的东西。无论是绘制本身是需求，还是插画只是大设计中的一部分
-- **绝不手工拼 `path`/`polygon`/其他形状节点**——手搓的美术效果一定粗糙。**自由绘制的唯一工具就是 `Generate`**
-- 显示 SVG：先 Insert 一个带目标宽高的 **frame**（不允许其他元素类型），再 `Generate`。生成的 path 元素会缩放到适配 frame 的包围盒并插入为其子节点
+- **任何绘制任务都用 SVG 生成**：logo、插画、吉祥物、徽章、装饰画、抽象图案。**绝不手工拼 `path`/`polygon`**——手搓的美术效果一定粗糙
+- 先 Insert 一个带目标宽高的 **frame**（`placeholder: true`，不允许其他节点类型），`Generate("svg", frameId, prompt)`；生成的 path 缩放到适配 frame 包围盒并插入为其子节点
+- `"vectorize-image"`：同样先建 frame，把已有图片描摹成矢量路径，行为同 `"svg"`
 
 ---
 

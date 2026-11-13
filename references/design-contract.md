@@ -97,7 +97,7 @@ prototype-designer/
   "migrationState": "extracted",
   "nativeFormat": ".pen",
   "htmlPolicy": "required",
-  "requires": ["node>=18", "pen>=0.3.12", "pen-auth"],
+  "requires": ["node>=18", "pen>=0.3.16", "pen-auth"],
   "preflight": null,
   "capabilities": {
     "create": true,

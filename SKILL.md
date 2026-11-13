@@ -3,11 +3,11 @@ name: prototype-designer
 slug: prototype-designer
 displayName: prototype-designer
 
-version: 5.6.0
+version: 5.7.0
 description: 页面设计 Skill，支持 pen.dev（原 Pencil）、Axure 与 Figma。可创建/修改 .pen、管理组件库、生成可交互 HTML 原型；也可经 zee-rp 的 CLI/MCP 生成和修改可在 Axure RP 中继续编辑的原生 .rp；或通过 Figma Remote MCP 读取/创建云端设计（写操作需 Full/Dev 席位，只读席位自动降级）。进入设计前先检查 PRD.md、标准控件库与设计规范（design.md、tokens.json、variables.css、UI Design.pen/rp/html 或 Figma 文件），已有资产强制复用，缺失则询问或建默认并标注「默认值待确认」。随后确认产出形态：「原生设计文件 + 可交互 HTML」或「仅 HTML」；选择原生后再由本 Skill 询问 Pen / Axure / Figma / 墨刀 Modao（OpenDesign planned，当前禁用）。（仅 HTML 跳过原生工具环境校验，但保留 PRD/控件库/设计规范/组件库流程）。生成 HTML 原型时首次询问外壳变体（A 顶部导航 / B 三栏标注评审 / C 直出）并记住选择，后续默认沿用直到用户明确更换；配色与字体由项目令牌区按项目前端/UI 规范注入，不绑定视觉预设。Axure 子技能进入前先告知 zee-rp 第三方工具风险，默认 CLI 模式不接管鼠标/键盘，原生验收需逐项目开启 gui-acceptance；墨刀子技能经官方生成型 MCP 异步产出单文件 HTML（continue_task 迭代）。CLI Agent 快速出图，MCP execute 精细控制，browser 网页转设计。用户提到 Pencil/pen.dev、生成 .pen、Figma、Figma MCP、墨刀、MockingBot、modao、页面/UI 设计、组件库、网页转设计、HTML 原型、Axure、.rp、RP/1 或 zee-rp 时应使用此 skill。
 author: AI Agent Team
 created: 2026-03-31
-updated: 2026-10-27
+updated: 2026-11-13
 tags:
   - design
   - ui
@@ -51,7 +51,8 @@ triggers:
 # pen.dev Designer - Skill 指令
 
 > **重要**：Pencil 已正式更名为 **pen.dev**。CLI 命令 `pencil` → `pen`，包名 `@pencil.dev/cli` → `@pen.dev/cli`。
-> 本 Skill v5.2.0 已对齐 pen.dev CLI 0.3.12 与 Pen.app 1.2.5+ 的 MCP 工具集，并支持 Pen / Axure / Figma 三种原生适配器。
+> 本 Skill 已对齐 pen.dev CLI **0.3.16**（2026-11-12 发布；schema 2.22）的 MCP 工具集，并支持 Pen / Axure / Figma / 墨刀四种原生适配器。
+> **0.3.12 → 0.3.16 关键变化**：`Generate` 参数顺序反转（type 在第一位）、新增三种图片变换类型；`prompt` / `context` 节点类型移除、新增 `browser` 节点；组件库支持内置 `pencil:shadcn.lib.pen`；官方推荐 agent 用 `pen interactive` 模式。详见 [adapters/pen/SKILL.md](adapters/pen/SKILL.md)。
 > zee-rp 是独立实验性项目，不是 Axure 官方产品；其证据边界见 [axure-mode.md](adapters/axure/references/axure-mode.md)。Figma 写操作依赖 Remote MCP 与 Full/Dev 席位，见 [adapters/figma/SKILL.md](adapters/figma/SKILL.md)。
 
 ---
@@ -337,16 +338,19 @@ whoami()
 ```bash
 pen --out design.pen --prompt "<用户原话>" --export design.png --export-scale 2
 pen --in design.pen --out design-v2.pen --prompt "把主色改成绿色" --export v2.png
-pen --out design.pen --library 控件库.pen --prompt "..."
-pen --out design.pen --agent codex --prompt "..."
-pen --out design.pen --prompt "参照这个布局" --prompt-file ./ref.png
+pen --out design.pen --library 控件库.pen --prompt "..."              # --library 可重复传
+pen --out design.pen --library pencil:shadcn.lib.pen --prompt "..."  # 内置 shadcn 组件库
+pen --out design.pen --agent codex --prompt "..."                    # 需先 pen codex-login
+pen --out design.pen --prompt "参照这个布局" --prompt-file ./ref.png  # 附参考图/文件，可重复
+pen --tasks batch.json --agent claude                                # 官方批处理任务文件
 ```
 
 - 直接透传用户原话，不自行扩写 prompt；超时至少 600000ms（10 分钟）。
 - 生成后用 Read 读取导出的 PNG 展示给用户，必须展示。
-- `--model` / `--agent` 按需指定；批量见 §11。
+- `--model` / `--agent` 按需指定（agent 支持 claude / codex / Pi providers）；批量可用 `--tasks` 任务文件或见 §11。
+- 排障：`--verbose-mcp` 看 MCP 完整错误，`--max-failed-calls` 失败熔断。
 
-**MCP Interactive**：`pen interactive -i input.pen -o output.pen`；首次进入 `.pen` 任务先 `get_app_state()`、`read_skill({path:"pen-schema.md"})`、`read_skill({path:"execute.md"})`。
+**MCP Interactive（官方推荐 agent 模式）**：`pen interactive -i input.pen -o output.pen`；首次进入 `.pen` 任务先 `get_app_state()`、`read_skill({path:"pen-schema.md"})`、`read_skill({path:"execute.md"})`；headless 改动需 `save()` 落盘。
 
 | 工具 | 用途 | 关键参数 |
 |---|---|---|
@@ -601,7 +605,7 @@ noteId = Insert(pageId,{type:"note",name:"功能说明",content:"这是便签内
 
 ## 13. 设计最佳实践
 
-1. **优先复用**：先 `Get(n => n.reusable && Print(n.id,n.name))` 查现有组件；CLI 生成时加 `--library 控件库.pen` 载入组件库，再新建
+1. **优先复用**：先 `Get(n => n.reusable && Print(n.id,n.name))` 查现有组件；CLI 生成时加 `--library 控件库.pen`（可重复，内置库 `pencil:shadcn.lib.pen` 可直接用）载入组件库，再新建
 2. **CLI 优先**：整体用 Agent 模式，细节用 `execute`
 3. **分 section 推进**：每做完一块立即 `TakeScreenshot` 验证
 4. **重复 UI 组件化**：先建 `reusable: true` 组件，再 `ref` 实例化，改一处全量生效
@@ -647,9 +651,10 @@ noteId = Insert(pageId,{type:"note",name:"功能说明",content:"这是便签内
 
 ## 版本信息
 
-- **Skill**: 5.6.0
-- **对齐**: pen.dev CLI 0.3.12 / Pen.app 1.2.5+ / zee-rp 0.2.0（RP9/RP11）/ Figma Remote MCP / 墨刀生成型 MCP
-- **更新**: 2026-10-27
+- **Skill**: 5.7.0
+- **对齐**: pen.dev CLI 0.3.16（schema 2.22）/ Pen.app 1.2.5+ / zee-rp 0.2.0（RP9/RP11）/ Figma Remote MCP / 墨刀生成型 MCP
+- **更新**: 2026-11-13
+- **v5.7.0**: 对齐 pen.dev CLI 0.3.16（2026-11-12）：`Generate` 参数顺序反转（type 第一位）并新增 `vectorize-image` / `remove-background` / `replace-background` 与配额挂起（`pencil://deferred-generation/` 禁重试）机制；schema 2.22 同步——移除 `prompt`/`context` 节点、新增 `browser` 节点、`note` 新增 `color`、image fill `mode` 改 `cover|contain|stretch`、shadow 移除 `spread`、新增 `shader` effect；组件库支持内置 `pencil:shadcn.lib.pen` 与 interactive `import_library`/`list_libraries`；新增 `--tasks` 官方批处理、`--verbose-mcp`/`--max-failed-calls` 排障参数；`Export` 新增 `svg` 格式；官方推荐 agent 用 `pen interactive` 模式；便签支持 `color` 背景后更新便签样式指引
 - **v5.6.0**: 新增客户端能力探测：无本地 shell / 持久文件系统 / 原生 MCP（如 ChatGPT 网页版与临时沙箱）时自动降级为「仅 HTML」模式；接受用户粘贴的 PRD / 设计规范，只输出单文件自包含 HTML，不写 `components.json`、不尝试 Pen/Axure/Figma/墨刀、不引导 `skillhub login`
 - **v5.5.0**: Axure 适配器新增执行模式：默认 `cli`（纯文件，不启动 Axure、不发 System Events / CGEvent、不写剪贴板、不抢焦点）；`gui-acceptance` 需逐项目显式授权；新增 RP9/RP11 [版本差异矩阵](adapters/axure/references/version-matrix.md)；preflight 支持 `--mode cli|gui`；生成/修改后追加 `version-lint`
 - **v5.4.0**: 新增模式 5（墨刀 Modao）：官方生成型 MCP 适配器 `adapters/modao/`；意图翻译 query → `generate_html` 异步生成 → `get_task_result` 轮询 → `continue_task` 迭代；产出交公共核心按 `shellVariant` 组装；manifest 新增 mode `modao`

@@ -199,7 +199,7 @@
 
 ### 步骤 2: 检查组件库文件
 
-模式 1：按 `控件库.pen` > `lib.pen` > `component.lib` > `*.lib.pen` 检查是否存在有效控件库文件。
+模式 1：按 `控件库.pen` > `lib.pen` > `component.lib` > `*.lib.pen` 检查是否存在有效控件库文件；CLI 生成可加 `--library <file>`（可重复）或直接用内置库 `pencil:shadcn.lib.pen`，interactive 会话内用 `import_library` / `list_libraries` 管理。
 模式 2：检查 `htmlLibraryFile` 指向的 `component-library.html` 是否存在、是否能解析出 `<template data-component>`。
 模式 3：检查 `axureMasterFile` / `axureLibraryFile` 指向的 `.rp` / `.rplib` 是否存在，能否用 `rp-read` 解析。
 模式 4：检查 `figmaFileKey` 是否可从 URL 或用户输入解析，`get_libraries` / `search_design_system` 是否可访问目标组件。

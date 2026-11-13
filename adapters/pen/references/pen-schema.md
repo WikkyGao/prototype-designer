@@ -1,7 +1,9 @@
 # .pen 文件 Schema 速查
 
-> 对应 pen.dev Document Schema `version: "2.17"`。内容源自官方 `read_skill({ path: "pen-schema.md" })`。
+> 对应 pen.dev Document Schema `version: "2.22"`。内容源自官方 `read_skill({ path: "pen-schema.md" })`（CLI 0.3.16 导出）。
 > 本文件给出**可直接用的节点类型与属性**；文末保留权威 TypeScript 类型定义。
+>
+> 2.17 → 2.22 变更摘要：移除 `prompt` / `context` 节点；新增 `browser` 节点；`note` 新增 `color`、移除 TextStyle；image fill `mode` 改为 `cover|contain|stretch` 并新增 `transform` 裁剪；shadow effect 移除 `spread`；新增 `shader` effect；gradient/image/mesh fill 支持独立 `opacity`。
 
 ---
 
@@ -12,7 +14,8 @@
 - `id` 字符串**不能含 `/`**。斜杠仅用于组件实例内部嵌套路径（`instanceId/childId`）。
 - 颜色：hex（`#RGB` / `#RRGGBB` / `#RRGGBBAA`）。变量引用用 `$name`。
 - 尺寸/位置可用 `$variable` 引用设计令牌（`fill`、`width`、`padding` 等都支持）。
-- `document` 根下**只放 page frame、可复用组件（`reusable: true`）、主容器**；不要把 text/icon/button/card 直接挂根。
+- `document` 根下**只放 page frame、可复用组件（`reusable: true`）、主容器、`browser` 节点**；不要把 text/icon/button/card 直接挂根。`browser` 节点可挂在顶层 frame 里，但**不能**放进嵌套 frame。
+- **组件实例（`ref`）没有自己的 children**——不要 `Get` 实例读子节点；用组件子节点 id 拼 `instanceId/childId` 路径，或 `Get(instanceId, {resolveInstances: true})` 读展开子树。
 
 ---
 
@@ -27,12 +30,13 @@
 | `polygon` | 多边形 | `polygonCount`、`cornerRadius` |
 | `path` | SVG path | `geometry`、`viewBox`、`fillRule` |
 | `text` | 文本 | `content`、`textGrowth`、`fontFamily`、`fontSize`、`fontWeight`、`textAlign`… |
-| `note` | 便签（注释） | `content`；**不支持 `fill`**（要背景色用 frame 包裹） |
-| `prompt` | 提示词节点 | `content`、`model` |
-| `context` | 上下文节点 | `content` |
-| `icon` | 图标库图标 | `library`、`icon`、`weight` |
-| `script` | 由 JS 生成嵌套子节点 | `scriptUri`、`inputs` |
+| `note` | 便签（注释） | `content`、`color`（背景色，默认 `#FEE484`）；**不支持 `fill`**（要样式化背景用 frame 包裹，便签本身没有 TextStyle） |
+| `browser` | 画布内**实时网页**节点 | `url`、`deviceId`（设备仿真预设）、`zoom`、`scrollX/scrollY`、`cornerRadius` |
+| `icon` | 图标库图标 | `library`（`lucide`/`feather`/`Material Symbols Outlined/Rounded/Sharp`/`phosphor`）、`icon`、`weight`（100-700） |
+| `script` | 由 JS 生成嵌套子节点 | `scriptUri`、`inputs`、`clip` |
 | `ref` | 复用实例（`ref` 指向 `reusable: true` 节点） | `ref`、`descendants` |
+
+> ⚠ 旧版的 `prompt` / `context` 节点类型已在 schema 2.22 **移除**，不要再创建；元数据一律走节点通用属性 `context?: string`。
 
 ---
 
@@ -87,12 +91,14 @@ interface Layout {
 | 类型 | 用途 | 关键字段 |
 |---|---|---|
 | `color` | 纯色 | `color`（支持 `$var`） |
-| `gradient` | 线性/径向/角向渐变 | `gradientType`、`colors[]`、`rotation`、`center`、`size` |
-| `image` | 图片（URL 相对 .pen，如 `./img.jpg`） | `url`、`mode: stretch\|fill\|fit` |
+| `gradient` | 线性/径向/角向渐变 | `gradientType`、`colors[]`、`rotation`（度，CCW，0°朝上）、`center`、`size`、`opacity` |
+| `image` | 图片（URL 相对 .pen，如 `./img.jpg`） | `url`、`mode: cover\|contain\|stretch`（默认 cover）、`transform`（仿射裁剪）、`opacity` |
 | `shader` | WebGL 着色器（`.glsl`，相对路径） | `url`、`uniforms` |
-| `mesh_gradient` | 贝塞尔色彩网格 | `columns`、`rows`、`colors[]`、`points[]` |
+| `mesh_gradient` | 贝塞尔色彩网格 | `columns`、`rows`、`colors[]`、`points[]`（支持贝塞尔手柄对象）、`opacity` |
 
-> 填充透明度只能经 hex alpha 通道设置（如 `#RRGGBBAA`），`opacity` 作用于整个节点而非单 fill。
+> 透明度规则：`color` fill 的透明度**只能**经 hex alpha 通道设置（如 `#RRGGBBAA`）；`gradient` / `image` / `shader` / `mesh_gradient` 有独立的 `opacity` 字段。节点级 `opacity` 作用于整个节点。
+
+**image fill 的 `transform` 裁剪**：仿射矩阵把图片归一化坐标（0..1）映射进裁剪框，如 `[2, 0, 0, 1, -1, 0]` 取右半图；`mode` 决定裁剪结果如何适配形状。
 
 ---
 
@@ -109,7 +115,8 @@ strokeAlignment?: "inner"|"center"|"outer";
 { type:"blur", radius }                          // 节点模糊
 { type:"background_blur", radius }               // 背景模糊
 { type:"shadow", shadowType:"inner"|"outer",
-  offset:{x,y}, spread, blur, color, blendMode } // 阴影
+  offset:{x,y}, blur, color, blendMode }         // 阴影 ⚠ 2.22 起无 spread
+{ type:"shader", url, uniforms }                 // 后处理着色器（2.22 新增）
 ```
 
 ---
@@ -144,9 +151,13 @@ interface Ref extends Entity {
 }
 ```
 
-- `descendants` 的 key 是后代的 id/path，或组件内**唯一后代名**（重名用 id）
-- key **不带 `type`** = 属性覆写；**带 `type`** = 整体替换该后代节点树
+- `descendants` 的 key 是后代的 id/path，或组件内**唯一后代名**（重名用 id）；多级后代**一层 key 用斜杠路径**，不要嵌套多层 `descendants`
+- key **不带 `type`** = 属性覆写；**带 `type`** = 整体替换该后代节点树（覆写必须是完整节点树）
 - 复制 `reusable` 节点会创建关联 `ref` 实例
+- **实例没有自己的 `children`**：改属性用 `Update(instanceId+"/childId", {...})`，替换用 `Replace(instanceId+"/childId", {...})`；确需读展开子树用 `Get(instanceId, {resolveInstances: true})`
+- 实例不在布局内时必须同时覆写 `x` 和 `y`（即使值为 0，也不要只写一个轴）
+- 缩放实例优先覆写 `fit_content` / `fill_container`
+- 组件**不能跨文件引用**；跨文件先 Copy 过来
 
 ---
 
@@ -154,7 +165,7 @@ interface Ref extends Entity {
 
 ```ts
 interface Document {
-  version: "2.17";
+  version: "2.22";
   themes?: { [axis: string]: string[] };                 // 主题轴 -> 轴值
   imports?: { [alias: string]: string };                 // 相对 URI 的 .pen 导入
   variables?: { [name: string]: VariableDefinition };    // 设计令牌
@@ -197,10 +208,10 @@ export type SizingBehavior = string;
 export interface Position { x?: number; y?: number; }
 export interface Size { width?: NumberOrVariable | SizingBehavior; height?: NumberOrVariable | SizingBehavior; }
 export type BlendMode = 'normal' | 'darken' | 'multiply' | 'linearBurn' | 'colorBurn' | 'light' | 'screen' | 'linearDodge' | 'colorDodge' | 'overlay' | 'softLight' | 'hardLight' | 'difference' | 'exclusion' | 'hue' | 'saturation' | 'color' | 'luminosity';
-export type Fill = ColorOrVariable | { type: "color"; enabled?: BooleanOrVariable; blendMode?: BlendMode; color: ColorOrVariable; } | { type: "gradient"; enabled?: BooleanOrVariable; blendMode?: BlendMode; gradientType?: "linear" | "radial" | "angular"; opacity?: NumberOrVariable; center?: Position; size?: { width?: NumberOrVariable; height?: NumberOrVariable }; rotation?: NumberOrVariable; colors?: { color: ColorOrVariable; position: NumberOrVariable }[]; } | { type: "image"; enabled?: BooleanOrVariable; blendMode?: BlendMode; opacity?: NumberOrVariable; url?: string; mode?: "stretch" | "fill" | "fit" } | { type: "shader"; enabled?: BooleanOrVariable; blendMode?: BlendMode; opacity?: NumberOrVariable; url: string; uniforms?: { [key: string]: number | boolean | string | number[] }; } | { type: "mesh_gradient"; enabled?: BooleanOrVariable; blendMode?: BlendMode; opacity?: NumberOrVariable; columns?: number; rows?: number; colors?: ColorOrVariable[]; points?: ([number, number] | { position: [number, number]; leftHandle?: [number, number]; rightHandle?: [number, number]; topHandle?: [number, number]; bottomHandle?: [number, number]; })[]; };
+export type Fill = ColorOrVariable | { type: "color"; enabled?: BooleanOrVariable; blendMode?: BlendMode; color: ColorOrVariable; } | { type: "gradient"; enabled?: BooleanOrVariable; blendMode?: BlendMode; gradientType?: "linear" | "radial" | "angular"; opacity?: NumberOrVariable; center?: Position; size?: { width?: NumberOrVariable; height?: NumberOrVariable }; rotation?: NumberOrVariable; colors?: { color: ColorOrVariable; position: NumberOrVariable }[]; } | { type: "image"; enabled?: BooleanOrVariable; blendMode?: BlendMode; opacity?: NumberOrVariable; url?: string; mode?: "cover" | "contain" | "stretch"; transform?: [number, number, number, number, number, number]; } | { type: "shader"; enabled?: BooleanOrVariable; blendMode?: BlendMode; opacity?: NumberOrVariable; url: string; uniforms?: { [key: string]: number | boolean | string | number[] }; } | { type: "mesh_gradient"; enabled?: BooleanOrVariable; blendMode?: BlendMode; opacity?: NumberOrVariable; columns?: number; rows?: number; colors?: ColorOrVariable[]; points?: ([number, number] | { position: [number, number]; leftHandle?: [number, number]; rightHandle?: [number, number]; topHandle?: [number, number]; bottomHandle?: [number, number]; })[]; };
 export type Fills = Fill | Fill[];
 export interface CanHaveStroke { stroke?: Fills; strokeWidth?: NumberOrVariable | { top?: NumberOrVariable; right?: NumberOrVariable; bottom?: NumberOrVariable; left?: NumberOrVariable }; strokeLinecap?: "butt" | "round" | "square"; strokeLinejoin?: "miter" | "bevel" | "round"; strokeAlignment?: "inner" | "center" | "outer"; }
-export type Effect = { enabled?: BooleanOrVariable; type: "blur"; radius?: NumberOrVariable } | { enabled?: BooleanOrVariable; type: "background_blur"; radius?: NumberOrVariable } | { type: "shadow"; enabled?: BooleanOrVariable; shadowType?: "inner" | "outer"; offset?: { x: NumberOrVariable; y: NumberOrVariable }; spread?: NumberOrVariable; blur?: NumberOrVariable; color?: ColorOrVariable; blendMode?: BlendMode };
+export type Effect = { enabled?: BooleanOrVariable; type: "blur"; radius?: NumberOrVariable } | { enabled?: BooleanOrVariable; type: "background_blur"; radius?: NumberOrVariable } | { type: "shadow"; enabled?: BooleanOrVariable; shadowType?: "inner" | "outer"; offset?: { x: NumberOrVariable; y: NumberOrVariable }; blur?: NumberOrVariable; color?: ColorOrVariable; blendMode?: BlendMode } | { type: "shader"; enabled?: BooleanOrVariable; url: string; uniforms?: { [key: string]: number | boolean | string | number[] } };
 export type Effects = Effect | Effect[];
 export interface CanHaveEffects { effect?: Effects; }
 export interface CanHaveGraphics extends CanHaveEffects, CanHaveStroke { fill?: Fills; }
@@ -216,13 +227,12 @@ export interface Text extends Entity, Size, CanHaveGraphics, TextStyle { type: "
 export interface CanHaveChildren { children?: Child[]; }
 export interface Frame extends Rectangleish, CanHaveChildren, Layout { type: "frame"; clip?: BooleanOrVariable; placeholder?: boolean; slot?: false | string[]; }
 export interface Group extends Entity, CanHaveChildren, CanHaveEffects { type: "group"; }
-export interface Note extends Entity, Size, TextStyle { type: "note"; content?: TextContent; }
-export interface Prompt extends Entity, Size, TextStyle { type: "prompt"; content?: TextContent; model?: StringOrVariable; }
-export interface Context extends Entity, Size, TextStyle { type: "context"; content?: TextContent; }
+export interface Note extends Entity, Size { type: "note"; content?: TextContent; color?: ColorOrVariable; }
 export interface Icon extends Entity, Size, CanHaveEffects { type: "icon"; library?: StringOrVariable; icon?: StringOrVariable; weight?: NumberOrVariable; fill?: Fills; }
 export interface Script extends Entity, Size { type: "script"; clip?: BooleanOrVariable; scriptUri?: string; inputs?: { [key: string]: string | number | boolean | Variable }; }
+export interface Browser extends Entity, Size, CanHaveEffects, CanHaveStroke { type: "browser"; url?: string; deviceId?: string; zoom?: number; scrollX?: number; scrollY?: number; cornerRadius?: NumberOrVariable | [NumberOrVariable, NumberOrVariable, NumberOrVariable, NumberOrVariable]; }
 export interface Ref extends Entity { type: "ref"; ref: string; descendants?: { [key: string]: {} }; [key: string]: any; }
-export type Child = Frame | Group | Rectangle | Ellipse | Path | Polygon | Text | Note | Prompt | Context | Icon | Script | Ref;
+export type Child = Frame | Group | Rectangle | Ellipse | Path | Polygon | Text | Note | Icon | Script | Browser | Ref;
 export type IdPath = string;
-export interface Document { version: "2.17"; themes?: { [key: string]: string[] }; imports?: { [key: string]: string }; variables?: { [key: string]: { type: "boolean"; value: BooleanOrVariable | { value: BooleanOrVariable; theme?: Theme }[] } | { type: "color"; value: ColorOrVariable | { value: ColorOrVariable; theme?: Theme }[] } | { type: "number"; value: NumberOrVariable | { value: NumberOrVariable; theme?: Theme }[] } | { type: "string"; value: StringOrVariable | { value: StringOrVariable; theme?: Theme }[] } }; children: Child[]; }
+export interface Document { version: "2.22"; themes?: { [key: string]: string[] }; imports?: { [key: string]: string }; variables?: { [key: string]: { type: "boolean"; value: BooleanOrVariable | { value: BooleanOrVariable; theme?: Theme }[] } | { type: "color"; value: ColorOrVariable | { value: ColorOrVariable; theme?: Theme }[] } | { type: "number"; value: NumberOrVariable | { value: NumberOrVariable; theme?: Theme }[] } | { type: "string"; value: StringOrVariable | { value: StringOrVariable; theme?: Theme }[] } }; children: Child[]; }
 ```

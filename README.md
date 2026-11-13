@@ -2,7 +2,7 @@
 
 页面设计 Skill，支持 Codex、Claude Code 及通用 Agent；ChatGPT 网页版/沙箱可降级为仅 HTML 模式。pen.dev 链路用 CLI Agent 快速出图、MCP `execute` 精细控制；Axure 链路经 zee-rp 的 CLI/MCP 生成可继续在 Axure RP 中编辑的原生 `.rp`；Figma 链路经 Remote MCP 读写云端设计；配置文件管理组件库。
 
-> **重要**：Pencil 已正式更名为 **pen.dev**。命令 `pencil` → `pen`，npm 包 `@pencil.dev/cli` → `@pen.dev/cli`，环境变量 `PENCIL_*` → `PEN_*`。本 Skill v5.6.0 已对齐 pen.dev CLI 0.3.12、Pen.app 1.2.5+、zee-rp 0.2.0、Figma Remote MCP 与墨刀生成型 MCP；HTML 原型外壳分 A / B / C 三种变体（首次询问 + 项目级记忆），视觉由项目令牌区按项目规范注入；Axure 子技能前置 zee-rp 第三方工具风险告知，默认 CLI 模式不接管鼠标/键盘，原生验收需逐项目开启 `gui-acceptance`。zee-rp 是独立实验性项目，不是 Axure 官方产品。
+> **重要**：Pencil 已正式更名为 **pen.dev**。命令 `pencil` → `pen`，npm 包 `@pencil.dev/cli` → `@pen.dev/cli`，环境变量 `PENCIL_*` → `PEN_*`。本 Skill v5.7.0 已对齐 pen.dev CLI **0.3.16**（schema 2.22：`Generate` 参数顺序反转、`prompt`/`context` 节点移除、新增 `browser` 节点、内置 `pencil:shadcn.lib.pen` 组件库）、Pen.app 1.2.5+、zee-rp 0.2.0、Figma Remote MCP 与墨刀生成型 MCP；HTML 原型外壳分 A / B / C 三种变体（首次询问 + 项目级记忆），视觉由项目令牌区按项目规范注入；Axure 子技能前置 zee-rp 第三方工具风险告知，默认 CLI 模式不接管鼠标/键盘，原生验收需逐项目开启 `gui-acceptance`。zee-rp 是独立实验性项目，不是 Axure 官方产品。
 
 ## 🗺️ Skill 全流程
 
@@ -21,7 +21,7 @@
 **模式 1（.pen + HTML）**：
 
 - **Node.js**: >= 18
-- **pen.dev CLI**: >= 0.3.12，`npm install -g @pen.dev/cli`
+- **pen.dev CLI**: >= 0.3.16，`npm install -g @pen.dev/cli`
 - **认证**: 运行 `pen login`（或 `pen codex-login` 供 codex agent）或设置 `PEN_CLI_KEY` 环境变量
 
 **模式 2（仅 HTML）**：
@@ -231,11 +231,20 @@ Agent 会根据以下标准自动判断一个元素是否应该成为可复用�
 
 ## 版本
 
-- 版本号: 5.6.0
+- 版本号: 5.7.0
 - 创建日期: 2026-03-31
-- 更新日期: 2026-10-27
+- 更新日期: 2026-11-13
 
 ## 更新日志
+
+### v5.7.0 (2026-11-13)
+
+- 🔄 对齐 pen.dev CLI **0.3.16**（2026-11-12 发布，schema 2.22）：`Generate` 参数顺序反转（type 第一位），新增 `vectorize-image` / `remove-background` / `replace-background` 与配额挂起（`pencil://deferred-generation/` 禁重试）机制
+- 🗑️ schema 同步：移除 `prompt` / `context` 节点类型；新增 `browser` 画布网页节点；`note` 新增 `color` 背景、移除 TextStyle；image fill `mode` 改 `cover|contain|stretch`；shadow 移除 `spread`；新增 `shader` effect
+- 📚 组件库升级：`--library` 可重复传、支持内置 `pencil:shadcn.lib.pen`；interactive shell 新增 `import_library` / `remove_library` / `list_libraries`
+- ⚙️ CLI 新增 `--tasks` 官方批处理、`--verbose-mcp` / `--max-failed-calls` 排障参数、云 workspace 支持；`Export` 新增 `svg` 格式
+- 🤖 官方推荐 agent 使用 `pen interactive` 模式；`read_skill` 指南清单扩容（generate / components / design-system / code / tailwind 等）
+- 📝 便签指引更新：优先 `note` + `color`，排版控制改用 frame + text
 
 ### v5.6.0 (2026-10-27)
 

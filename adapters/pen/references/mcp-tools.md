@@ -2,13 +2,12 @@
 
 > 本文只描述 pen.dev 的 MCP。模式 3（Axure）使用 zee-rp 的 MCP（`axure_open` / `locate` / `edit_text` / `axure_save` 等），见 [axure-mode.md](../../axure/references/axure-mode.md)。
 >
-> 对应 pen.dev CLI **0.3.12** / Pen.app 1.2.5+ MCP server。MCP 工具共 **5 个**：
+> 对应 pen.dev CLI **0.3.16**（2026-11-12 发布）MCP server。MCP 工具共 **5 个**：
 > `execute` / `get_app_state` / `get_style` / `read_skill` / `browser`。
 >
-> 0.3.12 变更：`get_guidelines` 已移除（改用 `get_style` + `read_skill`）；`get_app_state` 改为无参数；`execute` 新增 `description`；`browser` 新增 `cdp` / `nodeId` / `method` / `params`。
+> 0.3.16 相对 0.3.12：工具集数量不变；`get_style` 的风格清单换为**具名风格原型**（Aerial Gravitas 等，带 params 二段加载）；`read_skill` 的指南清单扩容（generate / components / code / design-system / tailwind / slides 等）；interactive shell 新增 `import_library` / `remove_library` / `list_libraries`；headless 模式用 `save()` 落盘。
 > 更早移除的 `batch_design`、`batch_get`、`get_editor_state`、`get_screenshot`、`export_nodes`、`get_variables`、`set_variables`、`snapshot_layout` 同样不可用。
 >
-> 启动参数（桌面端）：`mcp-server --app desktop --agent claudeCodeCLI`。
 > 桌面连接需 **Pen.app 正在运行**，否则返回空。
 
 ---
@@ -80,25 +79,25 @@
 
 ## 四、get_style
 
-加载视觉风格原型。风格（style）**只提供参考值，不写入变量**。
+加载视觉风格原型（style archetype）。风格**只提供参考值（字体/配色/图像），不写入变量**。
 
 ```json
 // 1) 列出全部可用 style
 { }
 
-// 2) 加载指定风格，或先拿所需 params
-{ "name": "minimal" }
+// 2) 加载指定风格；若该风格需要 params，响应里返回必填项
+{ "name": "Aerial Gravitas" }
 
 // 3) 带参数加载风格
-{ "name": "minimal", "params": { "accent": "#A3B59A" } }
+{ "name": "Aerial Gravitas", "params": { ... } }
 ```
 
 | 字段 | 说明 |
 |---|---|
-| `name` | 来自清单的风格名称 |
+| `name` | 来自清单的**具名风格**，如 `Aerial Gravitas`、`Artisan Editorial`、`Blueprint Technical`、`Modular Bento Showcase`、`Product Data Grid` 等（完整清单以 `get_style()` 返回为准） |
 | `params` | 第 2 步返回的必填键值对 |
 
-> 需要任务型设计指南时用 `read_skill`，不要一次加载互不兼容的多份风格。
+> 适合用户没有明确品牌/风格方向时选用；用户已有品牌规范时以项目令牌为准。需要任务型设计指南时用 `read_skill`，不要一次加载互不兼容的多份风格。
 
 ---
 
@@ -110,14 +109,28 @@
 // 返回官方 SKILL.md
 { }
 
-// 读取指定文档
+// 核心必读
 { "path": "pen-schema.md" }
 { "path": "execute.md" }
-{ "path": "guide/web-app.md" }
+
+// 按任务选读（0.3.16 清单扩容）
+{ "path": "generate.md" }                    // Generate 六种类型与配额机制
+{ "path": "guide/components.md" }            // 组件与实例模式（slot、嵌套实例）
+{ "path": "guide/design-system.md" }         // 设计系统组合
+{ "path": "guide/web-app.md" }               // Web 应用
+{ "path": "guide/mobile-app.md" }            // 移动应用
+{ "path": "guide/landing-page.md" }          // 落地页
+{ "path": "guide/table.md" }                 // 表格与仪表盘
+{ "path": "guide/slides.md" }                // 演示幻灯片
+{ "path": "guide/tailwind.md" }              // Tailwind v4 实现
+{ "path": "guide/code.md" }                  // 从 .pen 生成代码
+{ "path": "code-website.md" }                // 网站设计 ↔ 代码同步
+{ "path": "scripts-and-shaders.md" }         // 画布脚本与着色器
 ```
 
 - 首次进入 `.pen` 任务时读取 `pen-schema.md` 与 `execute.md`
-- 指南路径见官方 SKILL.md 的引用列表
+- 涉及图片/SVG 生成先读 `generate.md`；组件库任务读 `guide/components.md`
+- 白板/调研类（whiteboard、competitive-research、sitemap 等）与本 skill 无关，不要加载
 
 ---
 
@@ -167,7 +180,7 @@
 | `selection` | 用户在浏览器里用元素选择器挑中的（没有则报错） |
 | `query` | 由 `querySelector` 解析出的元素 |
 
-### CDP 限制（0.3.12）
+### CDP 限制（0.3.12 起，0.3.16 沿用）
 
 - 仅开放 `DOM` / `Input` / `Page` / `Runtime` / `Emulation` / `CSS` / `Accessibility` 域
 - 不要发送 `Escape`：编辑器会拦截并取消选中
@@ -177,8 +190,8 @@
 ### 使用要点
 
 - **先 `load-page`** 再调用其他 action；页面未加载会失败
-- `nodeId` 可驱动文档中的 browser 节点；省略则驱动侧边栏自带页面
-- localhost 开发服务器通常热更新：页面已加载时跳过 `load-page` 直接 `return-screenshot`
+- `nodeId` 可驱动文档中的 browser 节点（**每次调用都要传**，包括 CDP）；省略则驱动侧边栏自带页面
+- localhost 开发服务器通常热更新：页面已加载时跳过 `load-page` 直接 `return-screenshot`，改动不可见再 `load-page` 重载
 - 优先 `target: "query"` / `"selection"`，避免 `full-page` 撑爆上下文
 - `return-element` 对 `body`/`html` 或宽泛选择器要谨慎——整页 DOM 可能极大；改用具体 section 或 `return-screenshot`
 - `return-screenshot` 给你**肉眼看**；`screenshot-to-canvas` / `import-to-canvas` 把结果放进**用户文档**
@@ -190,3 +203,21 @@
 2. 忠实还原组件：`return-element`(.pricing-card) 读 DOM/样式 → `return-screenshot`(.pricing-card) 对比自己的渲染
 3. 闭环本地生成的页面：`load-page`(localhost) → `return-screenshot`(full-page)
 4. 操作页面菜单：`DOM.querySelector` + `DOM.getBoxModel` 定位 → `Input.dispatchMouseEvent` 点击中心 → `return-screenshot` 校验
+
+---
+
+## 七、interactive shell 命令（0.3.16）
+
+`pen interactive` 会话内除 MCP 工具外可用的 shell 命令：
+
+```
+tool_name({ key: value })     调用 MCP 工具
+save()                        落盘文档（headless 必须显式 save）
+exit()                        退出 shell
+import_library({ path })      导入 .lib.pen 组件库（也接受 pencil:shadcn.lib.pen 内置库）
+remove_library({ id })        移除已导入库；其实例退化为普通副本
+list_libraries()              列出已导入库（id / URI / 状态）
+```
+
+- 路径自动注入，工具调用**不需要**再传 `filePath`
+- 导入的库内容可与 `execute` 的 `Insert`（`reusable: true`）流程组合使用

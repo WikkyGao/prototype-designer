@@ -1,7 +1,7 @@
 {
   "name": "prototype-designer",
   "displayName": "页面设计技能（pen.dev / Axure / Figma；OpenDesign planned）",
-  "version": "5.6.0",
+  "version": "5.7.0",
   "description": "页面设计编排 Skill：先检查 PRD、标准控件库与设计规范，再确认产出形态（原生设计文件 + HTML 或仅 HTML）；原生工具由本 Skill 询问 Pen / Axure / Figma（OpenDesign planned）。采用编排层 + 适配器架构，HTML 原型外壳分 A 顶部导航 / B 三栏标注评审 / C 直出三种变体，首次询问并记住选择；配色与字体由项目令牌区按项目前端/UI 规范注入，不绑定视觉预设；Axure 子技能前置第三方工具风险告知；墨刀（Modao）官方生成型 MCP 适配器异步产出单文件 HTML（continue_task 迭代）；原型内嵌 prototype-manifest，页面/交互可被原型转前端直接解析",
   "description_en": "Page design skill for pen.dev, Axure, Figma and Modao (MockingBot) — CLI-first for speed, MCP execute for fine-grained control, browser for web-to-design, zee-rp for native Axure .rp (third-party tool risk disclosed up front), Figma Remote MCP for cloud files, Modao generative MCP for async single-file HTML; HTML prototype shells come in three variants (A top-nav / B three-column annotate / C direct) with first-run confirmation and project-level memory, all visuals driven by project tokens",
   "author": "WikkyGao",
@@ -77,6 +77,16 @@
     "墨刀（Modao）适配器：官方生成型 MCP，query 翻译 → generate_html 异步生成 → continue_task 迭代"
   ],
   "changelog": [
+    {
+      "version": "5.7.0",
+      "date": "2026-11-13",
+      "changes": [
+        "对齐 pen.dev CLI 0.3.16（schema 2.22）：Generate 参数顺序反转（type 第一位），新增 vectorize-image / remove-background / replace-background 与配额挂起（pencil://deferred-generation/ 禁重试）机制",
+        "schema 同步：移除 prompt/context 节点类型，新增 browser 节点，note 新增 color 移除 TextStyle，image fill mode 改 cover|contain|stretch，shadow 移除 spread，新增 shader effect",
+        "组件库升级：--library 可重复传、支持内置 pencil:shadcn.lib.pen；interactive shell 新增 import_library / remove_library / list_libraries",
+        "CLI 新增 --tasks 官方批处理、--verbose-mcp / --max-failed-calls 排障参数；Export 新增 svg 格式；官方推荐 agent 用 pen interactive 模式"
+      ]
+    },
     {
       "version": "5.6.0",
       "date": "2026-10-27",

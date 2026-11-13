@@ -9,7 +9,7 @@
   "htmlPolicy": "required",
   "requires": [
     "node>=18",
-    "pen>=0.3.12",
+    "pen>=0.3.16",
     "pen-auth"
   ],
   "preflight": null,
