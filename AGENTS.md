@@ -28,11 +28,12 @@ git push origin main && git push gitee main
 ```bash
 VER=$(python3 -c "import json;print(json.load(open('package.json'))['version'])")
 rm -f prototype-designer-*.zip
-zip -rq prototype-designer-$VER.zip . -x ".git/*" ".gitignore" ".DS_Store" "*/.DS_Store" ".claude/*" ".workbuddy/*" "*.pen" "*.png" "*.zip"
+zip -rq prototype-designer-$VER.zip . -x ".git/*" ".gitignore" "*.gitignore" ".DS_Store" "*/.DS_Store" ".claude/*" ".workbuddy/*" ".atomcode/*" "*.pen" "*.png" "*.zip" "*.rp"
 skillhub publish prototype-designer-$VER.zip --version $VER --changelog "<本次变更摘要>" --json
 ```
 
 - 发布返回 JSON 中 `tags.latest` 必须已指向新版本；`reviewStatus: pending` 属正常（审核异步）
+- 排除项说明（2026-11-13 实测，平台校验收紧）：嵌套 `.gitignore`（如 `.atomcode/local/.gitignore`）、`.atomcode/` 目录与二进制 `.rp`（demos 示例）均会被 400 拒绝，必须排除；`*.rp` 仅影响发布包，仓库与本地 rsync 分发不受影响
 
 ### 3. 更新所有本地 Agent（按 `~/Documents/skills/本地已安装Agent清单.md`）
 
